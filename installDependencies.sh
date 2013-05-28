@@ -1,0 +1,153 @@
+#!/bin/sh
+# 
+# File:   install.sh
+# Author: satya gowtham kudupudi
+#
+# Created on 15 Apr, 2013, 2:34:27 PM
+#
+
+if which ffmpeg >/dev/null; then
+    echo "ffmpeg installed."
+    if ls /usr/bin/ffmpeg > /dev/null;then
+            echo "ffmpeg is allowed to run as root."
+    else
+            echo "Allowing ffmpeg to run as root."
+            sudo ln -s /usr/local/bin/ffmpeg /usr/bin/
+    fi
+else
+    if ls /usr/local/bin/ffmpeg > /dev/null;then
+        echo "ffmpeg installed. Allowing ffmpeg to be run as root."
+        sudo ln -s /usr/local/bin/ffmpeg /usr/bin/
+    else
+        echo "Installing ffmpeg..."
+        if which apt-get >/dev/null; then
+            sudo apt-get remove ffmpeg x264 libav-tools libvpx-dev libx264-dev yasm
+            sudo apt-get update
+            sudo apt-get -y install autoconf automake build-essential checkinstall git libass-dev libfaac-dev \
+              libgpac-dev libjack-jackd2-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
+              librtmp-dev libsdl1.2-dev libspeex-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev \
+              libx11-dev libxext-dev libxfixes-dev pkg-config texi2html zlib1g-dev
+            
+            wget http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz
+            tar xzvf yasm-1.2.0.tar.gz
+            cd yasm-1.2.0
+            ./configure
+            make
+            sudo make install
+            cd ..
+            
+            git clone git://git.videolan.org/x264
+            cd x264
+            ./configure --enable-static
+            make
+            sudo make install
+            cd ..
+            
+            git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
+            cd fdk-aac
+            autoreconf -fiv
+            ./configure --disable-shared
+            make
+            sudo make install
+            cd ..
+           
+            git clone http://git.chromium.org/webm/libvpx.git
+            cd libvpx
+            ./configure
+            make
+            sudo make install
+            cd ..
+            
+            git clone git://source.ffmpeg.org/ffmpeg
+            cd ffmpeg
+            ./configure --enable-gpl --enable-libfdk_aac --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3
+            make
+            sudo make install
+            cd ..
+        fi
+        if which yum >/dev/null; then 
+            sudo yum update    
+            sudo yum erase ffmpeg x264 x264-devel
+            sudo yum install autoconf automake gcc gcc-c++ git libtool make nasm pkgconfig wget zlib-devel
+            
+            wget http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz
+            tar xzvf yasm-1.2.0.tar.gz
+            cd yasm-1.2.0
+            ./configure
+            make
+            sudo make install
+            cd ..
+
+            git clone git://git.videolan.org/x264
+            cd x264
+            ./configure --enable-static
+            make
+            sudo make install
+            cd ..
+            
+            git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
+            cd fdk-aac
+            autoreconf -fiv
+            ./configure --disable-shared
+            make
+            sudo make install
+            cd ..
+            
+            wget http://downloads.sourceforge.net/project/lame/lame/3.99/lame-3.99.5.tar.gz
+            tar xzvf lame-3.99.5.tar.gz
+            cd lame-3.99.5
+            ./configure --disable-shared --enable-nasm
+            make
+            sudo make install
+            cd ..
+            
+            wget http://downloads.xiph.org/releases/ogg/libogg-1.3.0.tar.gz
+            tar xzvf libogg-1.3.0.tar.gz
+            cd libogg-1.3.0
+            ./configure --disable-shared
+            make
+            sudo make install
+            cd ..
+            
+            wget http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.gz
+            tar xzvf libtheora-1.1.1.tar.gz
+            cd libtheora-1.1.1
+            ./configure --disable-shared
+            make
+            sudo make install
+            cd ..
+            
+            wget http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.3.tar.gz
+            tar xzvf libvorbis-1.3.3.tar.gz
+            cd libvorbis-1.3.3
+            ./configure --disable-shared
+            make
+            sudo make install
+            cd ..
+            
+            git clone http://git.chromium.org/webm/libvpx.git
+            cd libvpx
+            ./configure
+            make
+            sudo make install
+            cd ..
+            
+            git clone git://source.ffmpeg.org/ffmpeg
+            cd ffmpeg
+            ./configure --enable-gpl --enable-libfdk_aac --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3
+            make
+            sudo make install
+        fi
+        sudo ln -s /usr/local/bin/ffmpeg /usr/bin/
+    fi
+fi
+if ls /usr/include/libxml2 > /dev/null;then
+        echo "libxml2 devel installed."
+else
+    if which apt-get > /dev/null;then
+        sudo apt-get install libxml2-dev
+    fi
+    if which yum > /dev/null;then
+        sudo yum install libxml2-devel
+    fi
+fi

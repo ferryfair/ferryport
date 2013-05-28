@@ -1,0 +1,1 @@
+KERNEL=="video?", SYMLINK+="/var/remotedevicecontrollercams/%k"

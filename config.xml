@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config>
+    <server-addr>192.168.2.52</server-addr>
+    <server-port>80</server-port>
+    <stream-addr>192.168.2.25</stream-addr>
+    <stream-port>25222</stream-port>
+    <app-name>barista</app-name>
+</config>
