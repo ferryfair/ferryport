@@ -431,7 +431,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r 15 -s " + camSize + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r 5 -s " + camSize + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 fcpid = process.cpid;
