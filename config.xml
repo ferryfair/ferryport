@@ -8,6 +8,6 @@
     <bootup>true</bootup>
     <record-fps>15</record-fps>
     <record-resolution>320x240</record-resolution>
-    <stream-fps>3</stream-fps>
+    <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
 </config>
