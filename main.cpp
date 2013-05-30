@@ -1190,11 +1190,15 @@ void instReInstComCode(string sk) {
 void configure() {
     readConfig();
     cout << "\nCurrent " + string(APP_NAME) + " configuration:\n----------------------------";
+    cout << "\napp-name:\t" + appName;
     cout << "\nserver-addr:\t" + serverAddr;
     cout << "\nserver-port:\t" + serverPort;
     cout << "\nstream-addr:\t" + streamAddr;
     cout << "\nstream-port:\t" + streamPort;
-    cout << "\napp-name:\t" + appName;
+    cout << "\nrecord-fps:\t" + recordfps;
+    cout << "\nrecord-resolution:\t" + recordResolution;
+    cout << "\nstream-fps:\t" + streamfps;
+    cout << "\nstream-resolution:\t" + streamResolution;
     cout << "\nsystem-id:\t" + systemId;
     cout << "\nvideoStreamingType:\t" + videoStreamingType;
     cout << "\nautoInsertCameras:\t" + autoInsertCameras;
