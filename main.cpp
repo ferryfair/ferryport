@@ -64,7 +64,10 @@ string pollInterval;
 string autoInsertCameras;
 string configFile = "/etc/" + string(APP_NAME) + ".conf.xml";
 string camFolder = "/dev/";
-string camSize = "320x240";
+string recordResolution;
+string streamResolution;
+string recordfps;
+string streamfps;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -419,19 +422,19 @@ public:
             spawn process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r 15 -s " + camSize + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r 15 -s " + camSize + " -i " + dev + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r 3 -s " + camSize + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 fcpid = process.cpid;
@@ -649,6 +652,18 @@ void readConfig() {
         xo = xmlXPathEvalExpression((xmlChar*) "/config/autoInsertCameras", xc);
         node = xo->nodesetval->nodeTab[0];
         autoInsertCameras = string((char*) xmlNodeGetContent(node));
+        xo = xmlXPathEvalExpression((xmlChar*) "/config/record-fps", xc);
+        node = xo->nodesetval->nodeTab[0];
+        recordfps = string((char*) xmlNodeGetContent(node));
+        xo = xmlXPathEvalExpression((xmlChar*) "/config/record-resolution", xc);
+        node = xo->nodesetval->nodeTab[0];
+        recordResolution = string((char*) xmlNodeGetContent(node));
+        xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-fps", xc);
+        node = xo->nodesetval->nodeTab[0];
+        streamfps = string((char*) xmlNodeGetContent(node));
+        xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-resolution", xc);
+        node = xo->nodesetval->nodeTab[0];
+        streamResolution = string((char*) xmlNodeGetContent(node));
     }
     securityKey = generateSecurityKey();
     xmlCleanupParser();
