@@ -16,6 +16,7 @@ std::string implode(const std::string glue, const std::vector<std::string> &piec
 std::vector<std::string> explode(const std::string delimiter, const std::string &str);
 //float atof(const char* str);
 float timeToSec(std::string timestring);
+std::string tolower(std::string s);
 
 #endif	/* MYCONVERTERS_H */
 

@@ -103,3 +103,13 @@ float timeToSec(std::string timestring) {
     secs = atoi(t[0].c_str())*60 * 60 + atoi(t[1].c_str())*60 + atof(t[2].c_str());
     return secs;
 }
+
+std::string tolower(std::string s) {
+    char* buf;
+    buf = (char*) s.c_str();
+    int i;
+    for (int i = 0; i < s.length(); i++) {
+        buf[i] = tolower(buf[i]);
+    }
+    return std::string(buf);
+}

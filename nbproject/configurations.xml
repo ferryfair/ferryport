@@ -40,6 +40,11 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
+      <itemPath>config.xml</itemPath>
+      <itemPath>devices.rules</itemPath>
+      <itemPath>error.log</itemPath>
+      <itemPath>init.conf</itemPath>
+      <itemPath>init.d</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>

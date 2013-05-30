@@ -959,7 +959,6 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
             "\n-h --help Display this usage information."
             "\n-i --install Installs " + string(APP_NAME) + "."
             "\n-k --keyInstall Installs " + string(APP_NAME) + " with key given by user."
-            "\n-p --startup=\033[4mTOGGLE\033[0m If \033[4mTYPE\033[0m is 'true', " + string(APP_NAME) + " starts on system startup. For other way its 'false'."
             "\n-r --reinstall Reinstall the " + string(APP_NAME) + ""
             "\n-s --start=\033[4mTYPE\033[0m Runs client. If \033[4mTYPE\033[0m is 'daemon' " + string(APP_NAME) + " runs as daemon. If \033[4mTYPE\033[0m is 'normal' " + string(APP_NAME) + " runs normally."
             "\n-u --uninstall Uninstalls " + string(APP_NAME) + "."
@@ -1158,7 +1157,15 @@ void instReInstComCode(string sk) {
             writeConfigValue("pollInterval", pollInterval);
         }
         xmlCleanupParser();
-        cout << "\n" + string(APP_NAME) + " installed successfully :D\nPlease restart the system to start the service...\n";
+        cout << "\n" + string(APP_NAME) + " installed successfully :D"
+                "\nDo u wanna start " + string(APP_NAME) + " now? [Y/n]: ";
+        string input = inputText();
+        if (input.length() == 0 || tolower(input).compare("y") == 0) {
+            string cmd = "start " + string(APP_NAME);
+            system(cmd.c_str());
+        } else if (tolower(input).compare("n") == 0) {
+            cout << string(APP_NAME) + " will start at next system startup. To change configuration run '" + string(APP_NAME) + " -c'\n";
+        }
     } else {
         cout << "\n" + res;
         cout << "\nQuandary :( Please contact administrator.\n";
@@ -1186,8 +1193,45 @@ void configure() {
         if (pn.length() != 0) {
             cout << "\nValue:";
             val = inputText();
-            writeConfigValue(pn, val);
+            if (pn.compare("bootup") == 0) {
+                if (geteuid() != 0) {
+                    cout << "\nPlease login as root are sudo user.\n";
+                } else {
+                    struct stat st;
+                    if (val.compare("true") == 0) {
+                        if (stat(initFile.c_str(), &st) != -1) {
+                            cout << "\nAllowing to run " + string(APP_NAME) + " at startup...";
+                            if (stat(initOverrideFile.c_str(), &st) != -1) {
+                                string rmfcmd = "rm " + initOverrideFile;
+                                system(rmfcmd.c_str());
+                            }
+                            writeConfigValue(pn, val);
+                            cout << "ok\n";
+                        } else {
+                            cout << "\nInstall " + string(APP_NAME) + " in first.\n";
+                        }
+                    } else if (val.compare("false") == 0) {
+                        if (stat(initFile.c_str(), &st) != 1) {
+                            cout << "\nDisabling " + string(APP_NAME) + " to run at startup...";
+                            if (stat(initOverrideFile.c_str(), &st) == -1) {
+                                int fd = open(initOverrideFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+                                string buf = "manual";
+                                write(fd, buf.c_str(), buf.length());
+                                close(fd);
+                            }
+                            writeConfigValue(pn, val);
+                            cout << "ok\n";
+                        } else {
+                            cout << "\nInstall " + string(APP_NAME) + " in first.\n";
+                        }
+                    }
+                }
+            } else {
+                writeConfigValue(pn, val);
+            }
         } else {
+            cout << "\n";
+            fflush(stdout);
             break;
         }
     }
@@ -1355,7 +1399,6 @@ int main(int argc, char** argv) {
         {"uninstall", 0, NULL, 'u'},
         {"stop", 0, NULL, 'x'},
         {"keyInstall", 0, NULL, 'k'},
-        {"startup", 1, NULL, 'p'},
         {"test", 0, NULL, 't'},
         {NULL, 0, NULL, 0}
     };
@@ -1398,39 +1441,6 @@ int main(int argc, char** argv) {
                 break;
             case 'k':
                 reinstallKey();
-                break;
-            case 'p':
-                if (geteuid() != 0) {
-                    cout << "\nPlease login as root are sudo user.\n";
-                } else {
-                    opt = string(optarg);
-                    struct stat st;
-                    if (opt.compare("true") == 0) {
-                        if (stat(initFile.c_str(), &st) != -1) {
-                            cout << "\nAllowing to run " + string(APP_NAME) + " at startup...";
-                            if (stat(initOverrideFile.c_str(), &st) != -1) {
-                                string rmfcmd = "rm " + initOverrideFile;
-                                system(rmfcmd.c_str());
-                            }
-                            cout << "ok\n";
-                        } else {
-                            cout << "\nInstall " + string(APP_NAME) + " in first.\n";
-                        }
-                    } else if (opt.compare("false") == 0) {
-                        if (stat(initFile.c_str(), &st) != 1) {
-                            cout << "\nDisabling " + string(APP_NAME) + " to run at startup...";
-                            if (stat(initOverrideFile.c_str(), &st) == -1) {
-                                int fd = open(initOverrideFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
-                                string buf = "manual";
-                                write(fd, buf.c_str(), buf.length());
-                                close(fd);
-                            }
-                            cout << "ok\n";
-                        } else {
-                            cout << "\nInstall " + string(APP_NAME) + " in first.\n";
-                        }
-                    }
-                }
                 break;
             case 't':
                 test();
