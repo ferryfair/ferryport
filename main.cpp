@@ -1175,6 +1175,7 @@ void instReInstComCode(string sk) {
         cout << "\n" + string(APP_NAME) + " installed successfully :D"
                 "\nDo u wanna start " + string(APP_NAME) + " now? [Y/n]: ";
         string input = inputText();
+        cout << "\n";
         if (input.length() == 0 || tolower(input).compare("y") == 0) {
             string cmd = "start " + string(APP_NAME);
             system(cmd.c_str());
