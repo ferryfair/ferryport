@@ -640,6 +640,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/app-name", xc);
     node = xo->nodesetval->nodeTab[0];
     appName = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/namespace", xc);
+    node = xo->nodesetval->nodeTab[0];
+    namespace = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/system-id", xc);
     if (xo->nodesetval->nodeNr > 0) {
         node = xo->nodesetval->nodeTab[0];
@@ -872,7 +875,7 @@ camState camStateChange() {
     }
     cout << strGPS;
     fflush(stdout);
-    string content = "<GetDataChangeBySystemId xmlns=\"EAKSuperVisionService\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
+    string content = "<GetDataChangeBySystemId xmlns=\"" + namespace+"\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
         cout << "CONNECTION ERROR";
@@ -911,7 +914,7 @@ camState camStateChange() {
                 uninstall();
             } else if ((int) resCon.find("ViewAllRecordedFiles", 0) >= 0) {
                 string strRecordedFiles = getStrRecordedFiles();
-                content = "<InsertRecordedFiles xmlns=\"EAKSuperVisionService\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><strRecordedFiles>" + strRecordedFiles + "</strRecordedFiles></InsertRecordedFiles>";
+                content = "<InsertRecordedFiles xmlns=\"" + namespace+"\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><strRecordedFiles>" + strRecordedFiles + "</strRecordedFiles></InsertRecordedFiles>";
                 response = reqSOAPService("InsertRecordedFiles", (xmlChar*) content.c_str());
 
             } else if ((int) resCon.find("ViewSingleRecordedFile", 0) >= 0) {
@@ -1060,7 +1063,7 @@ void install() {
                 string username = inputText();
                 cout << "\npassword: ";
                 string password = inputPass();
-                string content = "<VendorLoginForClientComponent xmlns='EAKSuperVisionService'><AccountName></AccountName><Username>" + username + "</Username><Password>" + password + "</Password></VendorLoginForClientComponent>";
+                string content = "<VendorLoginForClientComponent xmlns='" + namespace+"'><AccountName></AccountName><Username>" + username + "</Username><Password>" + password + "</Password></VendorLoginForClientComponent>";
                 string res = reqSOAPService("VendorLoginForClientComponent", (xmlChar*) content.c_str());
                 xmlInitParser();
                 xmlDoc* xd2 = xmlParseDoc((xmlChar*) res.c_str());
@@ -1130,7 +1133,7 @@ void reinstall() {
 }
 
 void instReInstComCode(string sk) {
-    string content = (string) "<UpdateSystemInstallStatus xmlns='EAKSuperVisionService'><SecurityKey>" + sk + "</SecurityKey><InstallStatus>1</InstallStatus></UpdateSystemInstallStatus>";
+    string content = (string) "<UpdateSystemInstallStatus xmlns='" + namespace+"'><SecurityKey>" + sk + "</SecurityKey><InstallStatus>1</InstallStatus></UpdateSystemInstallStatus>";
     string res = reqSOAPService("UpdateSystemInstallStatus", (xmlChar*) content.c_str());
     if ((int) res.find(">1<", 0) != -1) {
         cout << "Writing required files to file system.";
@@ -1156,7 +1159,7 @@ void instReInstComCode(string sk) {
         }
         writeConfigValue("system-id", sk);
         securityKey = sk;
-        content = "<AddSystem xmlns=\"EAKSuperVisionService\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><SystemName>" + getMachineName() + "</SystemName><IPAddress /></AddSystem>";
+        content = "<AddSystem xmlns=\"" + namespace+"\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><SystemName>" + getMachineName() + "</SystemName><IPAddress /></AddSystem>";
         res = reqSOAPService("AddSystem", (xmlChar*) content.c_str());
         xmlInitParser();
         xmlDoc* xd = xmlParseDoc((xmlChar*) res.c_str());
@@ -1197,6 +1200,7 @@ void configure() {
     cout << "\nserver-port:\t" + serverPort;
     cout << "\nstream-addr:\t" + streamAddr;
     cout << "\nstream-port:\t" + streamPort;
+    cout << "\nnamespace:\t" + namespace;
     cout << "\nrecord-fps:\t" + recordfps;
     cout << "\nrecord-resolution:\t" + recordResolution;
     cout << "\nstream-fps:\t" + streamfps;
@@ -1340,13 +1344,11 @@ void update() {
     string cmd;
     if (stat(srcFolder.c_str(), &st) == -1) {
         chdir("/usr/local/src");
-        cmd = "git clone git://github.com/bulbmaker/RemoteDeviceController.git";
-        system(cmd.c_str());
-        cmd = "mv RemoteDeviceController " + string(APP_NAME);
+        cmd = "git clone git://github.com/bulbmaker/" + string(APP_NAME) + ".git";
         system(cmd.c_str());
     } else {
         chdir(srcFolder.c_str());
-        cout << "\nGit: pulling from online rekpostiory...";
+        cout << "\nGit: pulling from online repostiory...";
         fflush(stdout);
         cmd = "git pull";
         system(cmd.c_str());
@@ -1357,8 +1359,6 @@ void update() {
     system(cmd.c_str());
     cmd = "make";
     system(cmd.c_str());
-    cmd = "dist/Run/GNU-Linux-x86";
-    chdir(cmd.c_str());
     cout << "Spawning " + string(APP_NAME) + "...";
     cmd = "./" + string(APP_NAME) + " -r";
     spawn(cmd, false, NULL, true);
