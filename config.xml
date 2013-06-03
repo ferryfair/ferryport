@@ -11,4 +11,5 @@
     <record-resolution>320x240</record-resolution>
     <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
+    <debug>0</debug>
 </config>

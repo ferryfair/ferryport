@@ -69,6 +69,7 @@ string recordResolution;
 string streamResolution;
 string recordfps;
 string streamfps;
+int debug;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -643,6 +644,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/namespace", xc);
     node = xo->nodesetval->nodeTab[0];
     xmlnamespace = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/debug", xc);
+    node = xo->nodesetval->nodeTab[0];
+    debug = atoi((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/system-id", xc);
     if (xo->nodesetval->nodeNr > 0) {
         node = xo->nodesetval->nodeTab[0];
@@ -881,6 +885,10 @@ camState camStateChange() {
         cout << "CONNECTION ERROR";
         return cs;
     }
+    if (debug > 0) {
+        cout << response;
+        fflush(stdout);
+    }
     xmlChar *res = (xmlChar*) response.c_str();
     xmlDoc *xd = xmlParseDoc(res);
     xmlXPathContext *xpathCtx = xmlXPathNewContext(xd);
@@ -991,7 +999,7 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
 void run() {
     readConfig();
     if (securityKey.length() == 0) {
-        cout << "\nPlease install or re-install SuperVision.";
+        cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
     } else {
         if (geteuid() != 0) {
             cout << "\nPlease login as root are sudo user.\n";
@@ -1209,6 +1217,7 @@ void configure() {
     cout << "\nvideoStreamingType:\t" + videoStreamingType;
     cout << "\nautoInsertCameras:\t" + autoInsertCameras;
     cout << "\npollInterval:\t" + pollInterval;
+    cout << "\ndebug:\t" + string(itoa(debug));
     cout << "\n----------------------\nSet or Add configuration property\n";
     string pn;
     string val;
