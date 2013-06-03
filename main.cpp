@@ -57,7 +57,7 @@ string serverPort;
 string streamAddr;
 string streamPort;
 string appName;
-string namespace;
+string xmlnamespace;
 string systemId;
 string securityKey;
 string videoStreamingType;
@@ -642,7 +642,7 @@ void readConfig() {
     appName = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/namespace", xc);
     node = xo->nodesetval->nodeTab[0];
-    namespace = string((char*) xmlNodeGetContent(node));
+    xmlnamespace = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/system-id", xc);
     if (xo->nodesetval->nodeNr > 0) {
         node = xo->nodesetval->nodeTab[0];
@@ -846,7 +846,7 @@ string reqSOAPService(string service, xmlChar* content) {
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "soap12", (xmlChar*) "http://www.w3.org/2003/05/soap-envelope");
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "xsd", (xmlChar*) "http://www.w3.org/2001/XMLSchema");
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "xsi", (xmlChar*) "http://www.w3.org/2001/XMLSchema-instance");
-    xmlXPathRegisterNs(xpathCtx, (xmlChar*) "n", (xmlChar*)namespace.c_str());
+    xmlXPathRegisterNs(xpathCtx, (xmlChar*) "n", (xmlChar*) xmlnamespace.c_str());
     xmlXPathObject * accNameXpathObj = xmlXPathEvalExpression((xmlChar*) "/soap12:Envelope/soap12:Body/content", xpathCtx);
 
     xmlNode *node = accNameXpathObj->nodesetval->nodeTab[0];
@@ -857,7 +857,7 @@ string reqSOAPService(string service, xmlChar* content) {
     int size;
     xmlDocDumpMemory(xd, &s, &size);
     xmlCleanupParser();
-    string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", namespace+"/" + service, string((char*) s), false);
+    string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", xmlnamespace + "/" + service, string((char*) s), false);
     return res;
 }
 
@@ -875,7 +875,7 @@ camState camStateChange() {
     }
     cout << strGPS;
     fflush(stdout);
-    string content = "<GetDataChangeBySystemId xmlns=\"" + namespace+"\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
+    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
         cout << "CONNECTION ERROR";
@@ -914,7 +914,7 @@ camState camStateChange() {
                 uninstall();
             } else if ((int) resCon.find("ViewAllRecordedFiles", 0) >= 0) {
                 string strRecordedFiles = getStrRecordedFiles();
-                content = "<InsertRecordedFiles xmlns=\"" + namespace+"\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><strRecordedFiles>" + strRecordedFiles + "</strRecordedFiles></InsertRecordedFiles>";
+                content = "<InsertRecordedFiles xmlns=\"" + xmlnamespace + "\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><strRecordedFiles>" + strRecordedFiles + "</strRecordedFiles></InsertRecordedFiles>";
                 response = reqSOAPService("InsertRecordedFiles", (xmlChar*) content.c_str());
 
             } else if ((int) resCon.find("ViewSingleRecordedFile", 0) >= 0) {
@@ -1063,7 +1063,7 @@ void install() {
                 string username = inputText();
                 cout << "\npassword: ";
                 string password = inputPass();
-                string content = "<VendorLoginForClientComponent xmlns='" + namespace+"'><AccountName></AccountName><Username>" + username + "</Username><Password>" + password + "</Password></VendorLoginForClientComponent>";
+                string content = "<VendorLoginForClientComponent xmlns='" + xmlnamespace + "'><AccountName></AccountName><Username>" + username + "</Username><Password>" + password + "</Password></VendorLoginForClientComponent>";
                 string res = reqSOAPService("VendorLoginForClientComponent", (xmlChar*) content.c_str());
                 xmlInitParser();
                 xmlDoc* xd2 = xmlParseDoc((xmlChar*) res.c_str());
@@ -1133,7 +1133,7 @@ void reinstall() {
 }
 
 void instReInstComCode(string sk) {
-    string content = (string) "<UpdateSystemInstallStatus xmlns='" + namespace+"'><SecurityKey>" + sk + "</SecurityKey><InstallStatus>1</InstallStatus></UpdateSystemInstallStatus>";
+    string content = (string) "<UpdateSystemInstallStatus xmlns='" + xmlnamespace + "'><SecurityKey>" + sk + "</SecurityKey><InstallStatus>1</InstallStatus></UpdateSystemInstallStatus>";
     string res = reqSOAPService("UpdateSystemInstallStatus", (xmlChar*) content.c_str());
     if ((int) res.find(">1<", 0) != -1) {
         cout << "Writing required files to file system.";
@@ -1159,7 +1159,7 @@ void instReInstComCode(string sk) {
         }
         writeConfigValue("system-id", sk);
         securityKey = sk;
-        content = "<AddSystem xmlns=\"" + namespace+"\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><SystemName>" + getMachineName() + "</SystemName><IPAddress /></AddSystem>";
+        content = "<AddSystem xmlns=\"" + xmlnamespace + "\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><SystemName>" + getMachineName() + "</SystemName><IPAddress /></AddSystem>";
         res = reqSOAPService("AddSystem", (xmlChar*) content.c_str());
         xmlInitParser();
         xmlDoc* xd = xmlParseDoc((xmlChar*) res.c_str());
@@ -1200,7 +1200,7 @@ void configure() {
     cout << "\nserver-port:\t" + serverPort;
     cout << "\nstream-addr:\t" + streamAddr;
     cout << "\nstream-port:\t" + streamPort;
-    cout << "\nnamespace:\t" + namespace;
+    cout << "\nnamespace:\t" + xmlnamespace;
     cout << "\nrecord-fps:\t" + recordfps;
     cout << "\nrecord-resolution:\t" + recordResolution;
     cout << "\nstream-fps:\t" + streamfps;
