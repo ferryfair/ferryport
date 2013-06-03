@@ -57,6 +57,7 @@ string serverPort;
 string streamAddr;
 string streamPort;
 string appName;
+string namespace;
 string systemId;
 string securityKey;
 string videoStreamingType;
@@ -842,7 +843,7 @@ string reqSOAPService(string service, xmlChar* content) {
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "soap12", (xmlChar*) "http://www.w3.org/2003/05/soap-envelope");
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "xsd", (xmlChar*) "http://www.w3.org/2001/XMLSchema");
     xmlXPathRegisterNs(xpathCtx, (xmlChar*) "xsi", (xmlChar*) "http://www.w3.org/2001/XMLSchema-instance");
-    xmlXPathRegisterNs(xpathCtx, (xmlChar*) "n", (xmlChar*) "EAKSuperVisionService");
+    xmlXPathRegisterNs(xpathCtx, (xmlChar*) "n", (xmlChar*)namespace.c_str());
     xmlXPathObject * accNameXpathObj = xmlXPathEvalExpression((xmlChar*) "/soap12:Envelope/soap12:Body/content", xpathCtx);
 
     xmlNode *node = accNameXpathObj->nodesetval->nodeTab[0];
@@ -853,7 +854,7 @@ string reqSOAPService(string service, xmlChar* content) {
     int size;
     xmlDocDumpMemory(xd, &s, &size);
     xmlCleanupParser();
-    string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", "EAKSuperVisionService/" + service, string((char*) s), false);
+    string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", namespace+"/" + service, string((char*) s), false);
     return res;
 }
 
