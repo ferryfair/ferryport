@@ -17,6 +17,8 @@
 #include <sys/prctl.h>
 #include <signal.h>
 #include <vector>
+#include <wait.h>
+#include <malloc.h>
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -64,49 +66,97 @@ spawn::spawn() {
 
 }
 
-spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool freeChild) {
+spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool freeChild, bool block) {
     pipe(this->cpstdinp);
     pipe(this->cpstdoutp);
     pipe(this->cpstderrp);
-    this->cpid = fork();
     std::vector<std::string> cmdv = explode(" ", command);
     char * args[cmdv.size() + 1];
     int i = 0;
+    int a = 0;
+    bool validcmd = true;
+    std::string arg;
     for (i = 0; i < cmdv.size(); i++) {
-        args[i] = (char*) cmdv[i].c_str();
+        arg = std::string(cmdv[i]);
+        if (cmdv[i][0] == '"') {
+            i++;
+            while (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] != '"') {
+                arg += " " + cmdv[i];
+                i++;
+            }
+            if (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] == '"') {
+                arg += " " + cmdv[i];
+                i++;
+            } else {
+                validcmd = false;
+                i++;
+                break;
+            }
+        } else if (cmdv[i][0] == '\'') {
+            i++;
+            while (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] != '\'') {
+                arg += " " + cmdv[i];
+                i++;
+            }
+            if (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] == '\'') {
+                arg += " " + cmdv[i];
+                i++;
+            } else {
+                validcmd = false;
+                i++;
+                break;
+            }
+        }
+        char * buf = (char*)malloc(arg.length() + 1);
+        arg.copy(buf, arg.length(), 0);
+        buf[arg.length()] = '\0';
+        args[a] = buf;
+        ++a;
     }
-    args[i] = NULL;
-    if (this->cpid == 0) {
-        int fi;
-        if (!freeChild) {
-            prctl(PR_SET_PDEATHSIG, SIGKILL);
+    args[a] = NULL;
+    if (validcmd) {
+        this->cpid = fork();
+        if (this->cpid == 0) {
+            int fi;
+            if (!freeChild) {
+                prctl(PR_SET_PDEATHSIG, SIGKILL);
+            }
+            close(0);
+            dup(this->cpstdinp[0]);
+            close(this->cpstdinp[1]);
+            close(1);
+            dup(this->cpstdoutp[1]);
+            close(this->cpstdoutp[0]);
+            close(2);
+            dup(this->cpstderrp[1]);
+            close(this->cpstderrp[0]);
+            if (daemon) {
+                fi = open("/dev/null", O_APPEND | O_WRONLY);
+                dup2(fi, 2);
+            }
+            execvp(args[0], args);
+            if (daemon) {
+                close(fi);
+            }
+            if (onStopHandler != NULL)onStopHandler();
+        } else {
+            close(this->cpstdinp[0]);
+            this->cpstdin = this->cpstdinp[1];
+            close(this->cpstdoutp[1]);
+            this->cpstdout = this->cpstdoutp[0];
+            close(this->cpstderrp[1]);
+            this->cpstderr = this->cpstderrp[0];
+            if (block) {
+                waitpid(this->cpid, &this->childExitStatus, 0);
+            }
         }
-        close(0);
-        dup(this->cpstdinp[0]);
-        close(this->cpstdinp[1]);
-        close(1);
-        dup(this->cpstdoutp[1]);
-        close(this->cpstdoutp[0]);
-        close(2);
-        dup(this->cpstderrp[1]);
-        close(this->cpstderrp[0]);
-        if (daemon) {
-            fi = open("/dev/null", O_APPEND | O_WRONLY);
-            dup2(fi, 2);
-        }
-        execvp(args[0], args);
-        if (daemon) {
-            close(fi);
-        }
-        if (onStopHandler != NULL)onStopHandler();
     } else {
-        close(this->cpstdinp[0]);
-        this->cpstdin = this->cpstdinp[1];
-        close(this->cpstdoutp[1]);
-        this->cpstdout = this->cpstdoutp[0];
-        close(this->cpstderrp[1]);
-        this->cpstderr = this->cpstderrp[0];
+
     }
+}
+
+int spawn::getChildExitStatus() {
+    return this->childExitStatus;
 }
 
 int copyfile(std::string src, std::string dst) {

@@ -1,15 +1,17 @@
 <?xml version="1.0"?>
 <config>
-    <app-name>barista</app-name>
+    <app-name>kvrportal</app-name>
     <server-addr>192.168.2.52</server-addr>
     <server-port>80</server-port>
     <stream-addr>192.168.2.25</stream-addr>
     <stream-port>25222</stream-port>
-    <namespace>EAKSuperVisionService</namespace>
+    <namespace>PortalvisionService</namespace>
     <bootup>true</bootup>
     <record-fps>15</record-fps>
     <record-resolution>320x240</record-resolution>
     <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
-    <debug>0</debug>
+    <mobile-broadband-connection></mobile-broadband-connection>
+    <corporate-network-gateway></corporate-network-gateway>
+    <debug>1</debug>
 </config>

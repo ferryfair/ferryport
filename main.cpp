@@ -69,6 +69,8 @@ string recordResolution;
 string streamResolution;
 string recordfps;
 string streamfps;
+string mobileBroadbandCon;
+string corpNWGW;
 int debug;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
@@ -81,6 +83,7 @@ string rootBinLnk = "/usr/bin/" + string(APP_NAME);
 string srcFolder = "/usr/local/src/" + string(APP_NAME);
 time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
+int SOAPServiceReqCount = 0;
 
 bool allCams = false;
 string reqCam;
@@ -102,6 +105,8 @@ time_t gpsReadEnd;
 string gpsCoordinates;
 pthread_t gpsUpdaterThread;
 
+pthread_t nwMgrThread;
+
 time_t currentTime;
 
 void run();
@@ -111,6 +116,7 @@ void instReInstComCode(string sk);
 void stopRunningProcess();
 void* gpsLocationUpdater(void* arg);
 void reinstallKey();
+void* networkManager(void* arg);
 
 class camService {
 public:
@@ -288,7 +294,7 @@ public:
         struct stat ptr;
         if (stat(proc.c_str(), &ptr) != -1) {
             pkilled = false;
-            i = kill(records[ri].spid, SIGKILL);
+            i = kill(records[ri].spid, SIGTERM);
             while (!pkilled);
         }
         return i;
@@ -462,7 +468,7 @@ public:
         struct stat ptr;
         if (stat(proc.c_str(), &ptr) != -1) {
             pkilled = false;
-            i = kill(cs.pid, SIGKILL);
+            i = kill(cs.pid, SIGTERM);
             while (!pkilled);
         }
         return i;
@@ -647,6 +653,24 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/debug", xc);
     node = xo->nodesetval->nodeTab[0];
     debug = atoi((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/record-fps", xc);
+    node = xo->nodesetval->nodeTab[0];
+    recordfps = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/record-resolution", xc);
+    node = xo->nodesetval->nodeTab[0];
+    recordResolution = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-fps", xc);
+    node = xo->nodesetval->nodeTab[0];
+    streamfps = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-resolution", xc);
+    node = xo->nodesetval->nodeTab[0];
+    streamResolution = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/mobile-broadband-connection", xc);
+    node = xo->nodesetval->nodeTab[0];
+    mobileBroadbandCon = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/corporate-network-gateway", xc);
+    node = xo->nodesetval->nodeTab[0];
+    corpNWGW = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/system-id", xc);
     if (xo->nodesetval->nodeNr > 0) {
         node = xo->nodesetval->nodeTab[0];
@@ -660,18 +684,6 @@ void readConfig() {
         xo = xmlXPathEvalExpression((xmlChar*) "/config/autoInsertCameras", xc);
         node = xo->nodesetval->nodeTab[0];
         autoInsertCameras = string((char*) xmlNodeGetContent(node));
-        xo = xmlXPathEvalExpression((xmlChar*) "/config/record-fps", xc);
-        node = xo->nodesetval->nodeTab[0];
-        recordfps = string((char*) xmlNodeGetContent(node));
-        xo = xmlXPathEvalExpression((xmlChar*) "/config/record-resolution", xc);
-        node = xo->nodesetval->nodeTab[0];
-        recordResolution = string((char*) xmlNodeGetContent(node));
-        xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-fps", xc);
-        node = xo->nodesetval->nodeTab[0];
-        streamfps = string((char*) xmlNodeGetContent(node));
-        xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-resolution", xc);
-        node = xo->nodesetval->nodeTab[0];
-        streamResolution = string((char*) xmlNodeGetContent(node));
     }
     securityKey = generateSecurityKey();
     xmlCleanupParser();
@@ -749,14 +761,11 @@ void getCameras() {
 }
 
 void record() {
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pid_t fcpid;
     time_t rawtime;
     struct tm * timeinfo;
     char fn [80];
     char dn [80];
     time(&rawtime);
-    int ecode;
     timeinfo = localtime(&rawtime);
     strftime(fn, 80, "%Y-%m-%d_%H:%M:%S.flv", timeinfo);
     strftime(dn, 80, "%Y-%m-%d", timeinfo);
@@ -861,13 +870,13 @@ string reqSOAPService(string service, xmlChar* content) {
     int size;
     xmlDocDumpMemory(xd, &s, &size);
     xmlCleanupParser();
+    SOAPServiceReqCount++;
     string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", xmlnamespace + "/" + service, string((char*) s), false);
     return res;
 }
 
 camState camStateChange() {
     printf("\nChecking server status:");
-    int i = 0;
     getCameras();
     ps = cs;
     cs = csList::camReattached() ? CAM_NEW_STATE : CAM_PREVIOUS_STATE;
@@ -877,16 +886,19 @@ camState camStateChange() {
     if (currentTime - gpsReadStart < gpsUpdatePeriod + 2) {
         strGPS = gpsCoordinates;
     }
-    cout << strGPS;
     fflush(stdout);
     string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
+    if (debug > 0) {
+        cout << "\nSOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
+        fflush(stdout);
+    }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
         cout << "CONNECTION ERROR";
         return cs;
     }
     if (debug > 0) {
-        cout << response;
+        cout << "\nSOAPResponse: " + response + "\n";
         fflush(stdout);
     }
     xmlChar *res = (xmlChar*) response.c_str();
@@ -916,7 +928,7 @@ camState camStateChange() {
                 }
             } else if ((int) resCon.find("StartSoundRecord^", 0) >= 0) {
             } else if ((int) resCon.find("StopSoundRecord^", 0) >= 0) {
-            } else if ((int) resCon.find("StartSoundStream ^", 0) >= 0) {
+            } else if ((int) resCon.find("StartSoundStream^", 0) >= 0) {
             } else if ((int) resCon.find("StopSoundStream^", 0) >= 0) {
             } else if ((int) resCon.find("DeleteSystem", 0) >= 0) {
                 uninstall();
@@ -1005,6 +1017,7 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
+            //pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             writeConfigValue("pid", string(itoa(rootProcess)));
             csList::initialize(10);
             int ecode;
@@ -1063,7 +1076,7 @@ void install() {
         readConfig();
         int ret = system("which ffmpeg > /dev/null");
         if (ret == 0) {
-            cout << "\n Do want to install " + string(APP_NAME) + " with existing key(y) or with a new key(n)? ";
+            cout << "\n Do you want to install " + string(APP_NAME) + " with existing key(y) or with a new key(n)? ";
             string yn = inputText();
             if (yn.compare("n") == 0) {
                 cout << "Installation process for MEKCamController\nPlease give in prompted information...";
@@ -1176,23 +1189,31 @@ void instReInstComCode(string sk) {
         xmlNode* node;
         if (xo->nodesetval->nodeNr > 0) {
             node = xo->nodesetval->nodeTab[0];
-            videoStreamingType = string((char*) xmlNodeGetContent(node->children->next));
-            autoInsertCameras = string((char*) xmlNodeGetContent(node->children->next->next));
-            pollInterval = string((char*) xmlNodeGetContent(node->children->next->next->next));
-            writeConfigValue("videoStreamingType", videoStreamingType);
-            writeConfigValue("autoInsertCameras", autoInsertCameras);
-            writeConfigValue("pollInterval", pollInterval);
-        }
-        xmlCleanupParser();
-        cout << "\n" + string(APP_NAME) + " installed successfully :D"
-                "\nDo u wanna start " + string(APP_NAME) + " now? [Y/n]: ";
-        string input = inputText();
-        cout << "\n";
-        if (input.length() == 0 || tolower(input).compare("y") == 0) {
-            string cmd = "start " + string(APP_NAME);
-            system(cmd.c_str());
-        } else if (tolower(input).compare("n") == 0) {
-            cout << string(APP_NAME) + " will start at next system startup. To change configuration run '" + string(APP_NAME) + " -c'\n";
+            string resultmsg = string((char*) xmlNodeGetContent(node->children));
+            if (resultmsg.compare("System Updated Successfully.") == 0) {
+                videoStreamingType = string((char*) xmlNodeGetContent(node->children->next));
+                autoInsertCameras = string((char*) xmlNodeGetContent(node->children->next->next));
+                pollInterval = string((char*) xmlNodeGetContent(node->children->next->next->next));
+                writeConfigValue("videoStreamingType", videoStreamingType);
+                writeConfigValue("autoInsertCameras", autoInsertCameras);
+                writeConfigValue("pollInterval", pollInterval);
+                xmlCleanupParser();
+                cout << "\n" + string(APP_NAME) + " installed successfully :D"
+                        "\nDo u wanna start " + string(APP_NAME) + " now? [Y/n]: ";
+                string input = inputText();
+                cout << "\n";
+                if (input.length() == 0 || tolower(input).compare("y") == 0) {
+                    string cmd = "start " + string(APP_NAME);
+                    system(cmd.c_str());
+                } else if (tolower(input).compare("n") == 0) {
+                    cout << string(APP_NAME) + " will start at next system startup. To change configuration run '" + string(APP_NAME) + " -c'\n";
+                }
+            } else {
+                cout << "\nSorry some one booked the system while u r choosing! Try again.\n";
+            }
+        } else {
+            cout << "\n" + res;
+            cout << "\nQuandary :( Please contact administrator.\n";
         }
     } else {
         cout << "\n" + res;
@@ -1213,12 +1234,15 @@ void configure() {
     cout << "\nrecord-resolution:\t" + recordResolution;
     cout << "\nstream-fps:\t" + streamfps;
     cout << "\nstream-resolution:\t" + streamResolution;
+    cout << "\nbootup:\t" + readConfigValue("bootup");
     cout << "\nsystem-id:\t" + systemId;
     cout << "\nvideoStreamingType:\t" + videoStreamingType;
     cout << "\nautoInsertCameras:\t" + autoInsertCameras;
     cout << "\npollInterval:\t" + pollInterval;
+    cout << "\nmobile-broadband-connection:\t" + mobileBroadbandCon;
+    cout << "\ncorporate-network-gateway:\t" + corpNWGW;
     cout << "\ndebug:\t" + string(itoa(debug));
-    cout << "\n----------------------\nSet or Add configuration property\n";
+    cout << "\n-------------------------\nSet or Add configuration property\n";
     string pn;
     string val;
     while (true) {
@@ -1340,7 +1364,7 @@ void signalHandler(int signal_number) {
 void stopRunningProcess() {
     if (runningProcess > 0) {
         cout << "\nStopping current process.....";
-        if (kill(runningProcess, SIGKILL) != -1) {
+        if (kill(runningProcess, SIGTERM) != -1) {
             cout << "OK\n";
         } else {
             cout << "FAILED\n";
@@ -1407,6 +1431,20 @@ void test() {
     cout << buf;
     char ch[10] = "q";
     write(ps.cpstdin, ch, 10);
+}
+
+void* networkManager(void* arg) {
+    bool broadbandconnected = false;
+    while (true) {
+        if (!broadbandconnected) {
+            spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
+            int es = bbconnector.getChildExitStatus();
+            if (WIFEXITED(es)) {
+                int ees = WEXITSTATUS(es);
+            }
+        }
+        sleep(300);
+    }
 }
 
 int main(int argc, char** argv) {

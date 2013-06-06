@@ -28,6 +28,8 @@ private:
     int cpstdinp[2];
     int cpstdoutp[2];
     int cpstderrp[2];
+    int childExitStatus;
+
 public:
     pid_t cpid;
     int cpstdin;
@@ -35,7 +37,8 @@ public:
     int cpstderr;
 
     spawn();
-    spawn(std::string command, bool daemon = false, void (*onStopHandler)() = NULL, bool freeChild = false);
+    spawn(std::string command, bool daemon = false, void (*onStopHandler)() = NULL, bool freeChild = false, bool block = false);
+    int getChildExitStatus();
 };
 #endif	/* MYSTDLIB_H */
 
