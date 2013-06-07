@@ -71,6 +71,7 @@ string recordfps;
 string streamfps;
 string mobileBroadbandCon;
 string corpNWGW;
+bool manageNetwork = false;
 int debug;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
@@ -1017,7 +1018,9 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
-            pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
+            if (manageNetwork) {
+                pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
+            }
             writeConfigValue("pid", string(itoa(rootProcess)));
             csList::initialize(10);
             int ecode;
