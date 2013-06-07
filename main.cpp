@@ -1017,7 +1017,7 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
-            //pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
+            pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             writeConfigValue("pid", string(itoa(rootProcess)));
             csList::initialize(10);
             int ecode;
@@ -1437,10 +1437,24 @@ void* networkManager(void* arg) {
     bool broadbandconnected = false;
     while (true) {
         if (!broadbandconnected) {
+            if (debug > 0) {
+                cout << "\nnetworkManager: disabling mobile broadband.\n";
+            }
+            spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
+            sleep(5);
+            if (debug > 0) {
+                cout << "\nnetworkManager: enabling mobile broadband.\n";
+            }
             spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
             int es = bbconnector.getChildExitStatus();
+            if (debug > 0) {
+                cout << "\nnetworkManager: es=" + string(itoa(es)) + "\n";
+            }
             if (WIFEXITED(es)) {
                 int ees = WEXITSTATUS(es);
+                if (debug > 0) {
+                    cout << "\nnetworkManager: ees=" + string(itoa(ees)) + "\n";
+                }
             }
         }
         sleep(300);
