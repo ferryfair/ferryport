@@ -110,6 +110,8 @@ pthread_t nwMgrThread;
 
 time_t currentTime;
 
+bool broadbandconnected = false;
+
 void run();
 void stop();
 string readConfigValue(string name);
@@ -910,6 +912,7 @@ camState camStateChange() {
     }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
+        broadbandconnected = false;
         cout << "CONNECTION ERROR";
         return cs;
     }
@@ -1374,9 +1377,9 @@ void signalHandler(int signal_number) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
-            wait(&status);
             if (debug == 1) {
-                cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + " " + get_command_line(pid) + "\n";
+                cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
+                fflush(stdout);
             }
         }
         child_exit_status = status;
@@ -1459,25 +1462,24 @@ void test() {
 }
 
 void* networkManager(void* arg) {
-    bool broadbandconnected = false;
     while (true) {
         if (!broadbandconnected) {
-            if (debug > 0) {
+            if (debug == 1) {
                 cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
             }
             spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
             sleep(5);
-            if (debug > 0) {
+            if (debug == 1) {
                 cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
             }
             spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
             int es = bbconnector.getChildExitStatus();
-            if (debug > 0) {
+            if (debug == 1) {
                 cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
             }
             if (WIFEXITED(es)) {
                 int ees = WEXITSTATUS(es);
-                if (debug > 0) {
+                if (debug == 1) {
                     cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
                 }
             }
