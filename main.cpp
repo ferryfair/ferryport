@@ -1376,7 +1376,7 @@ void signalHandler(int signal_number) {
         }
         pid_t pid;
         int status;
-        while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+        while ((pid = waitpid(-1, NULL, WNOHANG|WCONTINUED)) > 0) {
             if (debug == 1) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
                 fflush(stdout);
