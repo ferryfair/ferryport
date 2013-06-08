@@ -1370,14 +1370,15 @@ void signalHandler(int signal_number) {
             } else if (rootProcess == getpid()) {
                 log("derror", "first child process exited.");
             }
-        } else if (debug == 1) {
-            pid_t pid;
-            while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+        }
+        pid_t pid;
+        int status;
+        while ((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
+            wait(&status);
+            if (debug == 1) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + " " + get_command_line(pid) + "\n";
             }
         }
-        int status;
-        wait(&status);
         child_exit_status = status;
     }
     pkilled = true;
