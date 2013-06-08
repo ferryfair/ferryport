@@ -1362,9 +1362,6 @@ void signalHandler(int signal_number) {
         munmap(file_memory, 1024);
     }
     if (signal_number == SIGCHLD) {
-
-    }
-    if (signal_number == SIGCHLD) {
         if (runMode.compare("daemon") == 0) {
             if (secondChild == getpid()) {
 
@@ -1373,9 +1370,9 @@ void signalHandler(int signal_number) {
             } else if (rootProcess == getpid()) {
                 log("derror", "first child process exited.");
             }
-        }else if (debug == 1) {
+        } else if (debug == 1) {
             pid_t pid;
-            while ((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
+            while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + " " + get_command_line(pid) + "\n";
             }
         }
