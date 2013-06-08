@@ -22,6 +22,8 @@ int rmmydir(std::string dirn);
 std::string inputPass();
 std::string inputText();
 std::string getStdoutFromCommand(std::string cmd);
+std::string getTime();
+std::string get_command_line(pid_t pid);
 
 class spawn {
 private:

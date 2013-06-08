@@ -1,4 +1,6 @@
 #include "mystdlib.h"
+#include "myconverters.h"
+#include "debug.h"
 #include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +13,6 @@
 #include <errno.h>
 #include <string>
 #include <sys/stat.h> 
-#include "myconverters.h"
 #include <ftw.h>
 #include <unistd.h>
 #include <sys/prctl.h>
@@ -106,8 +107,10 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
                 i++;
                 break;
             }
+        } else if (arg[arg.length() - 1] == '\\') {
+            arg = arg.substr(0, arg.length() - 1) + " " + cmdv[++i];
         }
-        char * buf = (char*)malloc(arg.length() + 1);
+        char * buf = (char*) malloc(arg.length() + 1);
         arg.copy(buf, arg.length(), 0);
         buf[arg.length()] = '\0';
         args[a] = buf;
@@ -121,14 +124,12 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
             if (!freeChild) {
                 prctl(PR_SET_PDEATHSIG, SIGKILL);
             }
-            close(0);
-            dup(this->cpstdinp[0]);
+            dup2(this->cpstdinp[0], 0);
             close(this->cpstdinp[1]);
-            close(1);
-            dup(this->cpstdoutp[1]);
+            dup2(this->cpstdoutp[1], 1);
             close(this->cpstdoutp[0]);
-            close(2);
-            dup(this->cpstderrp[1]);
+            close(this->cpstdoutp[0]);
+            dup2(this->cpstderrp[1], 2);
             close(this->cpstderrp[0]);
             if (daemon) {
                 fi = open("/dev/null", O_APPEND | O_WRONLY);
@@ -139,6 +140,11 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
                 close(fi);
             }
             if (onStopHandler != NULL)onStopHandler();
+            if (debug == 1) {
+                close(this->cpstdoutp[1]);
+                std::cout << "\n" + getTime() + "termination of pid: " + std::string(itoa(getpid())) + " command: " + command;
+                fflush(stdout);
+            }
         } else {
             close(this->cpstdinp[0]);
             this->cpstdin = this->cpstdinp[1];
@@ -146,6 +152,9 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
             this->cpstdout = this->cpstdoutp[0];
             close(this->cpstderrp[1]);
             this->cpstderr = this->cpstderrp[0];
+            for (i = 0; i < a; i++) {
+                free(args[a]);
+            }
             if (block) {
                 waitpid(this->cpid, &this->childExitStatus, 0);
             }
@@ -309,4 +318,38 @@ std::string getStdoutFromCommand(std::string cmd) {
         pclose(stream);
     }
     return data;
+}
+
+std::string getTime() {
+    struct tm * timeinfo;
+    char tb[20];
+    time_t ct;
+    time(&ct);
+    timeinfo = localtime(&ct);
+    strftime(tb, 20, "%Y-%m-%d %H:%M:%S", timeinfo);
+    return std::string(tb);
+}
+
+std::string get_command_line(pid_t pid) {
+    FILE *f;
+    char file[256], cmdline[256] = {0};
+    sprintf(file, "/proc/%d/cmdline", pid);
+
+    f = fopen(file, "r");
+    if (f) {
+        char *p = cmdline;
+        fgets(cmdline, sizeof (cmdline) / sizeof (*cmdline), f);
+        fclose(f);
+
+        while (*p) {
+            p += strlen(p);
+            if (*(p + 1)) {
+                *p = ' ';
+            }
+            p++;
+        }
+        return std::string(cmdline);
+    } else {
+        return std::string();
+    }
 }

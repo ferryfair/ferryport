@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <config>
     <app-name>kvrportal</app-name>
-    <server-addr>192.168.2.52</server-addr>
-    <server-port>80</server-port>
-    <stream-addr>192.168.2.25</stream-addr>
+    <server-addr>183.82.98.147</server-addr>
+    <server-port>15142</server-port>
+    <stream-addr>183.82.98.147</stream-addr>
     <stream-port>25222</stream-port>
     <namespace>PortalvisionService</namespace>
     <bootup>true</bootup>

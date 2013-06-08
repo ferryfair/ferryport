@@ -5,6 +5,12 @@
  * Created on 15 March, 2013, 12:18 PM
  */
 
+#include "Multimedia.h"
+#include "myconverters.h"
+#include "mystdlib.h"
+#include "myxml.h"
+#include "mycurl.h"
+#include "debug.h"
 #include <cstdlib>
 #include <stdio.h>
 #include <string.h>
@@ -17,10 +23,6 @@
 #include <fcntl.h>
 #include <time.h>
 #include <netdb.h>
-#include "myconverters.h"
-#include "mystdlib.h"
-#include "myxml.h"
-#include "mycurl.h"
 #include <libxml/xpathInternals.h>
 #include <libxml/xmlstring.h>
 #include <signal.h>
@@ -34,7 +36,6 @@
 #include <stdexcept>
 #include <signal.h>
 #include <sys/prctl.h>
-#include "Multimedia.h"
 
 #define MAX_CAMS 10
 #define APP_NAME "remotedevicecontroller"
@@ -72,7 +73,6 @@ string streamfps;
 string mobileBroadbandCon;
 string corpNWGW;
 bool manageNetwork = false;
-int debug;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -277,6 +277,10 @@ public:
             stopRecord(rIndex);
             string cmd = "ffmpeg -re -i " + rfa + " -vcodec libx264 -ab 128k -ac 2 -ar 44100 -r 25 -s 320x240 -vb 660k -f flv " + sa;
             records[rIndex].recorder = spawn(cmd, true, NULL, false);
+            if (debug == 1) {
+                cout << "\n" + getTime() + " setRecordState: " + cmd + " :" + string(itoa(records[rIndex].recorder.cpid)) + "\n";
+                fflush(stdout);
+            }
             records[rIndex].spid = records[rIndex].recorder.cpid;
             records[rIndex].newState = RECORD_PREVIOUS_STATE;
             records[rIndex].state = RECORD_STREAM;
@@ -434,18 +438,30 @@ public:
                 cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
+                if (debug == 1) {
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    fflush(stdout);
+                }
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
                 cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
+                if (debug == 1) {
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    fflush(stdout);
+                }
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
                 cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
+                if (debug == 1) {
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    fflush(stdout);
+                }
                 fcpid = process.cpid;
                 ns = CAM_STREAM_N_RECORD;
             } else if (cs.newState == CAM_OFF) {
@@ -877,7 +893,6 @@ string reqSOAPService(string service, xmlChar* content) {
 }
 
 camState camStateChange() {
-    printf("\nChecking server status:");
     getCameras();
     ps = cs;
     cs = csList::camReattached() ? CAM_NEW_STATE : CAM_PREVIOUS_STATE;
@@ -890,7 +905,7 @@ camState camStateChange() {
     fflush(stdout);
     string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
     if (debug > 0) {
-        cout << "\nSOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
+        cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
@@ -899,7 +914,7 @@ camState camStateChange() {
         return cs;
     }
     if (debug > 0) {
-        cout << "\nSOAPResponse: " + response + "\n";
+        cout << "\n" + getTime() + " SOAPResponse: " + response + "\n";
         fflush(stdout);
     }
     xmlChar *res = (xmlChar*) response.c_str();
@@ -1010,6 +1025,7 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
 }
 
 void run() {
+    secondChild = getpid();
     readConfig();
     if (securityKey.length() == 0) {
         cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
@@ -1346,9 +1362,7 @@ void signalHandler(int signal_number) {
         munmap(file_memory, 1024);
     }
     if (signal_number == SIGCHLD) {
-        int status;
-        wait(&status);
-        child_exit_status = status;
+
     }
     if (signal_number == SIGCHLD) {
         if (runMode.compare("daemon") == 0) {
@@ -1359,7 +1373,15 @@ void signalHandler(int signal_number) {
             } else if (rootProcess == getpid()) {
                 log("derror", "first child process exited.");
             }
+        }else if (debug == 1) {
+            pid_t pid;
+            while ((pid = waitpid(-1, NULL, WNOHANG)) != -1) {
+                cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + " " + get_command_line(pid) + "\n";
+            }
         }
+        int status;
+        wait(&status);
+        child_exit_status = status;
     }
     pkilled = true;
 }
@@ -1426,14 +1448,16 @@ void* gpsLocationUpdater(void* arg) {
 
 void test() {
     //videoSegmenter("wr3libvorbis.ogg", 10);
-    spawn ps = spawn("ffmpeg -f v4l2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.25:25333/venkat/test0", false);
+    //spawn ps = spawn("ffmpeg -f v4l2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.25:25333/venkat/test0", false);
     char buf[2000];
     /*read(ps.cpstdout, buf, 2000);
     cout << buf;*/
-    read(ps.cpstderr, buf, 2000);
+    //read(ps.cpstderr, buf, 2000);
     cout << buf;
     char ch[10] = "q";
-    write(ps.cpstdin, ch, 10);
+    //write(ps.cpstdin, ch, 10);
+    debug = 0;
+    spawn ps = spawn("ls -l ./");
 }
 
 void* networkManager(void* arg) {
@@ -1441,22 +1465,22 @@ void* networkManager(void* arg) {
     while (true) {
         if (!broadbandconnected) {
             if (debug > 0) {
-                cout << "\nnetworkManager: disabling mobile broadband.\n";
+                cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
             }
             spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
             sleep(5);
             if (debug > 0) {
-                cout << "\nnetworkManager: enabling mobile broadband.\n";
+                cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
             }
             spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
             int es = bbconnector.getChildExitStatus();
             if (debug > 0) {
-                cout << "\nnetworkManager: es=" + string(itoa(es)) + "\n";
+                cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
             }
             if (WIFEXITED(es)) {
                 int ees = WEXITSTATUS(es);
                 if (debug > 0) {
-                    cout << "\nnetworkManager: ees=" + string(itoa(ees)) + "\n";
+                    cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
                 }
             }
         }

@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Multimedia.o \
 	${OBJECTDIR}/ServerSocket.o \
 	${OBJECTDIR}/Socket.o \
+	${OBJECTDIR}/debug.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/myconverters.o \
 	${OBJECTDIR}/mycurl.o \
@@ -89,6 +90,11 @@ ${OBJECTDIR}/Socket.o: Socket.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Socket.o Socket.cpp
+
+${OBJECTDIR}/debug.o: debug.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/debug.o debug.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
