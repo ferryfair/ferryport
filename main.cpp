@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <signal.h>
 #include <sys/prctl.h>
+#include <semaphore.h>
 
 #define MAX_CAMS 10
 #define APP_NAME "remotedevicecontroller"
@@ -72,7 +73,7 @@ string recordfps;
 string streamfps;
 string mobileBroadbandCon;
 string corpNWGW;
-bool manageNetwork = false;
+int manageNetwork = 0;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -107,10 +108,13 @@ string gpsCoordinates;
 pthread_t gpsUpdaterThread;
 
 pthread_t nwMgrThread;
+sem_t nwMgrSem;
+pthread_mutex_t nwMgrMutex;
 
 time_t currentTime;
 
-bool broadbandconnected = false;
+bool masterReachable = false;
+pthread_mutex_t mrMutex;
 
 void run();
 void stop();
@@ -684,6 +688,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-resolution", xc);
     node = xo->nodesetval->nodeTab[0];
     streamResolution = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/manage-network", xc);
+    node = xo->nodesetval->nodeTab[0];
+    manageNetwork = atoi((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/mobile-broadband-connection", xc);
     node = xo->nodesetval->nodeTab[0];
     mobileBroadbandCon = string((char*) xmlNodeGetContent(node));
@@ -894,6 +901,21 @@ string reqSOAPService(string service, xmlChar* content) {
     return res;
 }
 
+bool connectToMaster() {
+    if (pthread_mutex_trylock(&nwMgrMutex) == 0) {
+        if (!masterReachable) {
+            sem_post(&nwMgrSem);
+            pthread_mutex_unlock(&nwMgrMutex);
+            pthread_mutex_lock(&nwMgrMutex);
+            pthread_mutex_unlock(&nwMgrMutex);
+        }
+    } else {
+        pthread_mutex_lock(&nwMgrMutex);
+        pthread_mutex_unlock(&nwMgrMutex);
+    }
+    return masterReachable;
+}
+
 camState camStateChange() {
     getCameras();
     ps = cs;
@@ -910,10 +932,13 @@ camState camStateChange() {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
+    pthread_mutex_lock(&mrMutex);
+    pthread_mutex_unlock(&mrMutex);
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
-        broadbandconnected = false;
-        cout << "CONNECTION ERROR";
+        masterReachable = false;
+        cout << "\n" + getTime() + " CONNECTION ERROR. Trying to connect to master....\n";
+        connectToMaster();
         return cs;
     }
     if (debug > 0) {
@@ -1037,7 +1062,8 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
-            if (manageNetwork) {
+            if (manageNetwork==1) {
+                sem_init(&nwMgrSem, 0, 1);
                 pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             }
             writeConfigValue("pid", string(itoa(rootProcess)));
@@ -1261,6 +1287,7 @@ void configure() {
     cout << "\nvideoStreamingType:\t" + videoStreamingType;
     cout << "\nautoInsertCameras:\t" + autoInsertCameras;
     cout << "\npollInterval:\t" + pollInterval;
+    cout << "\nmanage-network:\t" + string(itoa(manageNetwork));
     cout << "\nmobile-broadband-connection:\t" + mobileBroadbandCon;
     cout << "\ncorporate-network-gateway:\t" + corpNWGW;
     cout << "\ndebug:\t" + string(itoa(debug));
@@ -1376,7 +1403,7 @@ void signalHandler(int signal_number) {
         }
         pid_t pid;
         int status;
-        while ((pid = waitpid(-1, NULL, WNOHANG|WCONTINUED)) > 0) {
+        while ((pid = waitpid(-1, NULL, WNOHANG | WCONTINUED)) > 0) {
             if (debug == 1) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
                 fflush(stdout);
@@ -1463,28 +1490,35 @@ void test() {
 
 void* networkManager(void* arg) {
     while (true) {
-        if (!broadbandconnected) {
-            if (debug == 1) {
-                cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
-            }
-            spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
-            sleep(5);
-            if (debug == 1) {
-                cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
-            }
-            spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
-            int es = bbconnector.getChildExitStatus();
-            if (debug == 1) {
-                cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
-            }
-            if (WIFEXITED(es)) {
-                int ees = WEXITSTATUS(es);
+        sem_wait(&nwMgrSem);
+        pthread_mutex_lock(&nwMgrMutex);
+        if (!masterReachable) {
+            pthread_mutex_lock(&mrMutex);
+            if (mobileBroadbandCon.length()>0) {
                 if (debug == 1) {
-                    cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                    cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                 }
+                spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
+                sleep(5);
+                if (debug == 1) {
+                    cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
+                }
+                spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
+                int es = bbconnector.getChildExitStatus();
+                if (debug == 1) {
+                    cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
+                }
+                if (WIFEXITED(es)) {
+                    int ees = WEXITSTATUS(es);
+                    if (debug == 1) {
+                        cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                    }
+                }
+                masterReachable = true;
+                pthread_mutex_unlock(&mrMutex);
             }
         }
-        sleep(300);
+        pthread_mutex_unlock(&nwMgrMutex);
     }
 }
 

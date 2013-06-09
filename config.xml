@@ -11,7 +11,8 @@
     <record-resolution>320x240</record-resolution>
     <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
-    <mobile-broadband-connection></mobile-broadband-connection>
-    <corporate-network-gateway></corporate-network-gateway>
+    <manage-network>1</manage-network>
+    <mobile-broadband-connection>Airtel connection</mobile-broadband-connection>
+    <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <debug>1</debug>
 </config>
