@@ -379,6 +379,7 @@ public:
         if (!camAdded) {
             csList::csl[i].cam = cam;
             csList::camCount++;
+            csList::csl[i].newState = CAM_OFF;
             csList::csl[i].newState = CAM_RECORD;
         }
     }
