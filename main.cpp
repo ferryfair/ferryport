@@ -379,7 +379,7 @@ public:
         if (!camAdded) {
             csList::csl[i].cam = cam;
             csList::camCount++;
-            csList::csl[i].newState = CAM_OFF;
+            csList::csl[i].state = CAM_OFF;
             csList::csl[i].newState = CAM_RECORD;
         }
     }
@@ -1500,11 +1500,12 @@ void* networkManager(void* arg) {
                     cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                 }
                 spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
-                sleep(5);
+                sleep(1);
                 if (debug == 1) {
                     cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
                 }
                 spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
+                sleep(5);
                 int es = bbconnector.getChildExitStatus();
                 if (debug == 1) {
                     cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
