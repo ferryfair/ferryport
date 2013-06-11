@@ -14,5 +14,7 @@
     <manage-network>1</manage-network>
     <mobile-broadband-connection>Airtel connection</mobile-broadband-connection>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
+    <gps-device>/dev/ttyS0</gps-device>
+    <gps-sdevice-baudrate></gps-sdevice-baudrate>
     <debug>1</debug>
 </config>

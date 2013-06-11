@@ -74,6 +74,8 @@ string streamfps;
 string mobileBroadbandCon;
 string corpNWGW;
 int manageNetwork = 0;
+string gpsDevice;
+string gpsSDeviceBaudrate;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -698,6 +700,12 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/corporate-network-gateway", xc);
     node = xo->nodesetval->nodeTab[0];
     corpNWGW = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/gps-device", xc);
+    node = xo->nodesetval->nodeTab[0];
+    gpsDevice = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/gps-sdevice-baudrate", xc);
+    node = xo->nodesetval->nodeTab[0];
+    gpsSDeviceBaudrate = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/system-id", xc);
     if (xo->nodesetval->nodeNr > 0) {
         node = xo->nodesetval->nodeTab[0];
@@ -1063,7 +1071,7 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
-            if (manageNetwork==1) {
+            if (manageNetwork == 1) {
                 sem_init(&nwMgrSem, 0, 1);
                 pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             }
@@ -1455,7 +1463,18 @@ void* gpsLocationUpdater(void* arg) {
     char buf[48];
     char c;
     int i = 0;
-    FILE *f = fopen("/dev/ttyS0", "r");
+    string cmd;
+    if (gpsSDeviceBaudrate.length() > 0) {
+        cmd = "stty -F " + gpsDevice + " " + gpsSDeviceBaudrate;
+        spawn gpsdbrsetter = spawn(cmd, false, NULL, false, true);
+        if (debug == 1) {
+            cout << "\n" + getTime() + " setting baudrate:cmd:" + cmd + "\n";
+        }
+    }
+    FILE *f = fopen(gpsDevice.c_str(), "r");
+    if (debug == 1) {
+        cout << "\n" + getTime() + " reading gpsdevice:" + gpsDevice + "\n";
+    }
     while (1) {
         c = (char) getc(f);
         if (c == '@') {
@@ -1495,7 +1514,7 @@ void* networkManager(void* arg) {
         pthread_mutex_lock(&nwMgrMutex);
         if (!masterReachable) {
             pthread_mutex_lock(&mrMutex);
-            if (mobileBroadbandCon.length()>0) {
+            if (mobileBroadbandCon.length() > 0) {
                 if (debug == 1) {
                     cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                 }

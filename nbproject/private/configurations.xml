@@ -25,8 +25,8 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -i</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -t</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -i</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -s normal</runcommandpicklistitem>
         </runcommandpicklist>
         <runcommand>"${OUTPUT_PATH}" -s normal</runcommand>
