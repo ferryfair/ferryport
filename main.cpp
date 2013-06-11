@@ -951,6 +951,7 @@ camState camStateChange() {
         masterReachable = false;
         cout << "\n" + getTime() + " CONNECTION ERROR. Trying to connect to master....\n";
         connectToMaster();
+        sleep(1);
         immediateDisconnect = true;
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
