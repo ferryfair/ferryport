@@ -951,8 +951,11 @@ camState camStateChange() {
         masterReachable = false;
         cout << "\n" + getTime() + " CONNECTION ERROR. Trying to connect to master....\n";
         connectToMaster();
-        sleep(1);
-        immediateDisconnect = true;
+        if (!immediateDisconnect) {
+            immediateDisconnect = true;
+        } else {
+            immediateDisconnect = false;
+        }
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
@@ -1548,8 +1551,6 @@ void* networkManager(void* arg) {
                     }
                     masterReachable = true;
                 }
-            } else {
-                immediateDisconnect = false;
             }
             pthread_mutex_unlock(&mrMutex);
         }
