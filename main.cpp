@@ -1547,11 +1547,11 @@ void* networkManager(void* arg) {
                         }
                     }
                     masterReachable = true;
-                    pthread_mutex_unlock(&mrMutex);
                 }
             } else {
                 immediateDisconnect = false;
             }
+            pthread_mutex_unlock(&mrMutex);
         }
         pthread_mutex_unlock(&nwMgrMutex);
     }
