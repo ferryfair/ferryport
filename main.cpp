@@ -585,7 +585,9 @@ public:
     static int setStateAllCams(camState state) {
         int i = 0;
         while (i < csList::camCount) {
-            csList::csl[i].newState = state;
+            if (csList::csl[i].state != state) {
+                csList::csl[i].newState = state;
+            }
             i++;
         }
         return 0;
