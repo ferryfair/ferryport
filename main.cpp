@@ -495,7 +495,7 @@ public:
         struct stat ptr;
         if (stat(proc.c_str(), &ptr) != -1) {
             pkilled = false;
-            i = kill(cs.pid, SIGTERM);
+            i = kill(cs.pid, SIGKILL);
             while (!pkilled);
         }
         return i;
@@ -950,6 +950,8 @@ camState camStateChange() {
         cout << "\n" + getTime() + " CONNECTION ERROR. Trying to connect to master....\n";
         connectToMaster();
         immediateDisconnect = true;
+        csList::setStateAllCams(CAM_RECORD);
+        cs = CAM_NEW_STATE;
         return cs;
     }
     immediateDisconnect = false;
