@@ -1072,7 +1072,7 @@ void run() {
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
             if (manageNetwork == 1) {
-                sem_init(&nwMgrSem, 0, 1);
+                sem_init(&nwMgrSem, 0, 0);
                 pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             }
             writeConfigValue("pid", string(itoa(rootProcess)));
@@ -1475,7 +1475,7 @@ void* gpsLocationUpdater(void* arg) {
     if (debug == 1) {
         cout << "\n" + getTime() + " reading gpsdevice:" + gpsDevice + "\n";
     }
-    while (1) {
+    while (f) {
         c = (char) getc(f);
         if (c == '@') {
             time(&gpsReadStart);
@@ -1491,7 +1491,9 @@ void* gpsLocationUpdater(void* arg) {
             gpsCoordinates = "ttyS0:" + string(buf);
         }
     }
-    fclose(f);
+    if(debug==1){
+        cout<<"\n"+getTime()+" no gps device found. gpsLocationUpdater exiting.\n";
+    }
 }
 
 void test() {
