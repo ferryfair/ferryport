@@ -448,7 +448,7 @@ public:
             spawn process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if (debug == 1) {
@@ -458,7 +458,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if (debug == 1) {
@@ -468,7 +468,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f v4l2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + streamfps + " -s " + streamResolution + " -i " + dev + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if (debug == 1) {
@@ -1529,7 +1529,7 @@ void* gpsLocationUpdater(void* arg) {
 
 void test() {
     //videoSegmenter("wr3libvorbis.ogg", 10);
-    //spawn ps = spawn("ffmpeg -f v4l2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.25:25333/venkat/test0", false);
+    //spawn ps = spawn("ffmpeg -f video4linux2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.25:25333/venkat/test0", false);
     char buf[2000];
     /*read(ps.cpstdout, buf, 2000);
     cout << buf;*/
