@@ -58,7 +58,7 @@ else
             /configure --prefix="$HOME/ffmpeg_build" --enable-nasm --disable-shared
             make
             sudo make install
-            sudo make distclean
+            make distclean
             cd ..
             
             wget http://downloads.xiph.org/releases/opus/opus-1.0.2.tar.gz
@@ -67,7 +67,7 @@ else
             ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
             make
             sudo make install
-            sudo make distclean
+            make distclean
             cd ..
 
             git clone http://git.chromium.org/webm/libvpx.git
@@ -79,7 +79,7 @@ else
             
             git clone git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
-            ./configure --enable-gpl --enable-libfdk_aac --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3
+            ./configure --prefix="$HOME/ffmpeg_build" --extra-cflags="-I$HOME/ffmpeg_build/include" --extra-ldflags="-L$HOME/ffmpeg_build/lib" --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
             make
             sudo make install
             cd ..

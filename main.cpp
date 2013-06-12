@@ -76,7 +76,9 @@ string corpNWGW;
 int manageNetwork = 0;
 string gpsDevice;
 string gpsSDeviceBaudrate;
-string internetTestURL = "8.8.8.8";
+int reconnectPollCount = 0;
+int reconnectPollCountCopy;
+string internetTestURL;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -115,7 +117,6 @@ sem_t nwMgrSem;
 pthread_mutex_t nwMgrMutex;
 bool immediateDisconnect = false;
 bool internetConnection = true;
-
 time_t currentTime;
 
 bool masterReachable = false;
@@ -699,9 +700,16 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/manage-network", xc);
     node = xo->nodesetval->nodeTab[0];
     manageNetwork = atoi((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/reconnect-poll-count", xc);
+    node = xo->nodesetval->nodeTab[0];
+    reconnectPollCount = atoi((char*) xmlNodeGetContent(node));
+    reconnectPollCountCopy = reconnectPollCount;
     xo = xmlXPathEvalExpression((xmlChar*) "/config/mobile-broadband-connection", xc);
     node = xo->nodesetval->nodeTab[0];
     mobileBroadbandCon = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/internet-test-url", xc);
+    node = xo->nodesetval->nodeTab[0];
+    internetTestURL = string((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/corporate-network-gateway", xc);
     node = xo->nodesetval->nodeTab[0];
     corpNWGW = string((char*) xmlNodeGetContent(node));
@@ -951,8 +959,15 @@ camState camStateChange() {
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
         masterReachable = false;
-        cout << "\n" + getTime() + " CONNECTION ERROR. Trying to connect to master....\n";
-        connectToMaster();
+        cout << "\n" + getTime() + " CONNECTION ERROR.";
+        if (reconnectPollCountCopy == 0) {
+            reconnectPollCountCopy = reconnectPollCount;
+            immediateDisconnect = false;
+            cout << "Trying to connect to master....\n";
+            connectToMaster();
+        } else {
+            reconnectPollCountCopy--;
+        }
         if (!immediateDisconnect) {
             immediateDisconnect = true;
         } else {
@@ -962,6 +977,7 @@ camState camStateChange() {
         cs = CAM_NEW_STATE;
         return cs;
     }
+    reconnectPollCountCopy = reconnectPollCount;
     immediateDisconnect = false;
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPResponse: " + response + "\n";
@@ -1310,6 +1326,8 @@ void configure() {
     cout << "\nautoInsertCameras:\t" + autoInsertCameras;
     cout << "\npollInterval:\t" + pollInterval;
     cout << "\nmanage-network:\t" + string(itoa(manageNetwork));
+    cout << "\nreconnect-poll-count:\t" + string(itoa(reconnectPollCount));
+    cout << "\ninternet-test-url:\t" + internetTestURL;
     cout << "\nmobile-broadband-connection:\t" + mobileBroadbandCon;
     cout << "\ncorporate-network-gateway:\t" + corpNWGW;
     cout << "\ndebug:\t" + string(itoa(debug));

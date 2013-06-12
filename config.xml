@@ -12,7 +12,9 @@
     <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
     <manage-network>0</manage-network>
+    <reconnect-poll-count>5</reconnect-poll-count>
     <mobile-broadband-connection>Airtel connection</mobile-broadband-connection>
+    <internet-test-url>www.google.com</internet-test-url>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <gps-device>/dev/ttyS0</gps-device>
     <gps-sdevice-baudrate></gps-sdevice-baudrate>
