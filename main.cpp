@@ -1543,13 +1543,17 @@ void test() {
 }
 
 void* networkManager(void* arg) {
+    if (debug = 1) {
+        cout << "\n" + getTime() + " network manaeer started.\n";
+        fflush(stdout);
+    }
     while (true) {
         sem_wait(&nwMgrSem);
         pthread_mutex_lock(&nwMgrMutex);
         if (!masterReachable) {
             pthread_mutex_lock(&mrMutex);
             if (!immediateDisconnect) {
-                if (poke(internetTestURL) == 0) {
+                if (poke(internetTestURL) != 0) {
                     if (mobileBroadbandCon.length() > 0) {
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
