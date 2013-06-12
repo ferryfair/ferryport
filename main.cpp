@@ -1544,11 +1544,15 @@ void test() {
 
 void* networkManager(void* arg) {
     if (debug = 1) {
-        cout << "\n" + getTime() + " network manaeer started.\n";
+        cout << "\n" + getTime() + " network manager started.\n";
         fflush(stdout);
     }
     while (true) {
         sem_wait(&nwMgrSem);
+        if(debug==1){
+            cout << "\n"+getTime()+"\n masterReachable ="+string(itoa((int)masterReachable))+";"
+                    "\n immediateDisconnect ="+string(itoa((int)immediateDisconnect))+";\n";
+        }
         pthread_mutex_lock(&nwMgrMutex);
         if (!masterReachable) {
             pthread_mutex_lock(&mrMutex);
@@ -1557,22 +1561,26 @@ void* networkManager(void* arg) {
                     if (mobileBroadbandCon.length() > 0) {
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
+                            fflush(stdout);
                         }
                         spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
                         sleep(1);
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
+                            fflush(stdout);
                         }
                         spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
                         sleep(5);
                         int es = bbconnector.getChildExitStatus();
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
+                            fflush(stdout);
                         }
                         if (WIFEXITED(es)) {
                             int ees = WEXITSTATUS(es);
                             if (debug == 1) {
                                 cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                                fflush(stdout);
                             }
                         }
                         masterReachable = true;
