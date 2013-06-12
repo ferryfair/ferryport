@@ -927,6 +927,7 @@ bool connectToMaster() {
     if (pthread_mutex_trylock(&nwMgrMutex) == 0) {
         if (!masterReachable) {
             sem_post(&nwMgrSem);
+            usleep(30000);
             pthread_mutex_unlock(&nwMgrMutex);
             pthread_mutex_lock(&nwMgrMutex);
             pthread_mutex_unlock(&nwMgrMutex);
