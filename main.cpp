@@ -1550,11 +1550,11 @@ void* networkManager(void* arg) {
     }
     while (true) {
         sem_wait(&nwMgrSem);
+        pthread_mutex_lock(&nwMgrMutex);
         if(debug==1){
             cout << "\n"+getTime()+"\n masterReachable ="+string(itoa((int)masterReachable))+";"
                     "\n immediateDisconnect ="+string(itoa((int)immediateDisconnect))+";\n";
         }
-        pthread_mutex_lock(&nwMgrMutex);
         if (!masterReachable) {
             pthread_mutex_lock(&mrMutex);
             if (!immediateDisconnect) {
