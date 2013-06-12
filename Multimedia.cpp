@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 int videoSegmenter(std::string inputFile, int segmentLength, std::string outputFolder) {
     std::string ffcmd = "ffmpeg -i " + inputFile;
