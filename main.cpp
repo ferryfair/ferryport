@@ -1537,7 +1537,7 @@ void test() {
     cout << buf;
     char ch[10] = "q";
     //write(ps.cpstdin, ch, 10);
-    debug = 0;
+    debug = 1;
     int i = poke("8.8.8.8");
     printf("%d", i);
 }
