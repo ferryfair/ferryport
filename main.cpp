@@ -76,6 +76,7 @@ string corpNWGW;
 int manageNetwork = 0;
 string gpsDevice;
 string gpsSDeviceBaudrate;
+string internetTestURL = "8.8.8.8";
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -113,6 +114,7 @@ pthread_t nwMgrThread;
 sem_t nwMgrSem;
 pthread_mutex_t nwMgrMutex;
 bool immediateDisconnect = false;
+bool internetConnection = true;
 
 time_t currentTime;
 
@@ -1518,7 +1520,8 @@ void test() {
     char ch[10] = "q";
     //write(ps.cpstdin, ch, 10);
     debug = 0;
-    spawn ps = spawn("ls -l ./");
+    int i = poke("8.8.8.8");
+    printf("%d", i);
 }
 
 void* networkManager(void* arg) {
@@ -1528,28 +1531,30 @@ void* networkManager(void* arg) {
         if (!masterReachable) {
             pthread_mutex_lock(&mrMutex);
             if (!immediateDisconnect) {
-                if (mobileBroadbandCon.length() > 0) {
-                    if (debug == 1) {
-                        cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
-                    }
-                    spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
-                    sleep(1);
-                    if (debug == 1) {
-                        cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
-                    }
-                    spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
-                    sleep(5);
-                    int es = bbconnector.getChildExitStatus();
-                    if (debug == 1) {
-                        cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
-                    }
-                    if (WIFEXITED(es)) {
-                        int ees = WEXITSTATUS(es);
+                if (poke(internetTestURL) == 0) {
+                    if (mobileBroadbandCon.length() > 0) {
                         if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                            cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                         }
+                        spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
+                        sleep(1);
+                        if (debug == 1) {
+                            cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
+                        }
+                        spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
+                        sleep(5);
+                        int es = bbconnector.getChildExitStatus();
+                        if (debug == 1) {
+                            cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
+                        }
+                        if (WIFEXITED(es)) {
+                            int ees = WEXITSTATUS(es);
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                            }
+                        }
+                        masterReachable = true;
                     }
-                    masterReachable = true;
                 }
             }
             pthread_mutex_unlock(&mrMutex);

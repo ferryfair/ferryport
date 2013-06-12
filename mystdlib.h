@@ -24,6 +24,7 @@ std::string inputText();
 std::string getStdoutFromCommand(std::string cmd);
 std::string getTime();
 std::string get_command_line(pid_t pid);
+int poke(std::string ip);
 
 class spawn {
 private:

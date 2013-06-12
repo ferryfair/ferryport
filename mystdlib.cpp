@@ -20,6 +20,8 @@
 #include <vector>
 #include <wait.h>
 #include <malloc.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #ifdef WINDOWS
 #include <direct.h>
@@ -352,4 +354,18 @@ std::string get_command_line(pid_t pid) {
     } else {
         return std::string();
     }
+}
+
+int poke(std::string ip) {
+    /*int mysocket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    struct sockaddr_in sip;
+    memset(&sip, '0', sizeof (sip));
+    sip.sin_family = AF_INET;
+    sip.sin_port = htons(80);
+    if (inet_pton(AF_INET, ip.c_str(), &sip.sin_addr) <= 0) {
+        return -1;
+    }
+    return connect(mysocket, (sockaddr*) & sip, sizeof (sip));*/
+    spawn poke = spawn("ping -c 1 " + ip, false, NULL, false, true);
+    return poke.getChildExitStatus();
 }
