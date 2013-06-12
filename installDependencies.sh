@@ -51,31 +51,11 @@ else
             sudo make install
             cd ..
             
-            wget http://downloads.sourceforge.net/project/lame/lame/3.99/lame-3.99.5.tar.gz
-            tar xzvf lame-3.99.5.tar.gz
-            cd lame-3.99.5
-            autoreconf -fiv
-            /configure --prefix="$HOME/ffmpeg_build" --enable-nasm --disable-shared
-            make
-            sudo make install
-            make distclean
-            cd ..
+            sudo apt-get install libmp3lame-dev
             
-            wget http://downloads.xiph.org/releases/opus/opus-1.0.2.tar.gz
-            tar xzvf opus-1.0.2.tar.gz
-            cd opus-1.0.2
-            ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
-            make
-            sudo make install
-            make distclean
-            cd ..
+            sudo apt-get install libopus-dev
 
-            git clone http://git.chromium.org/webm/libvpx.git
-            cd libvpx
-            ./configure
-            make
-            sudo make install
-            cd ..
+            sudo apt-get install libvpx-dev
             
             git clone git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
