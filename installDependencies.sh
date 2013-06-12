@@ -38,7 +38,7 @@ else
             
             git clone git://git.videolan.org/x264
             cd x264
-            ./configure --enable-static
+            ./configure --prefix="$HOME/ffmpeg_build" --bindir="$HOME/bin" --enable-static
             make
             sudo make install
             cd ..
@@ -46,11 +46,30 @@ else
             git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
             cd fdk-aac
             autoreconf -fiv
-            ./configure --disable-shared
+            ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
             make
             sudo make install
             cd ..
-           
+            
+            wget http://downloads.sourceforge.net/project/lame/lame/3.99/lame-3.99.5.tar.gz
+            tar xzvf lame-3.99.5.tar.gz
+            cd lame-3.99.5
+            autoreconf -fiv
+            /configure --prefix="$HOME/ffmpeg_build" --enable-nasm --disable-shared
+            make
+            sudo make install
+            sudo make distclean
+            cd ..
+            
+            wget http://downloads.xiph.org/releases/opus/opus-1.0.2.tar.gz
+            tar xzvf opus-1.0.2.tar.gz
+            cd opus-1.0.2
+            ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
+            make
+            sudo make install
+            sudo make distclean
+            cd ..
+
             git clone http://git.chromium.org/webm/libvpx.git
             cd libvpx
             ./configure
@@ -134,9 +153,14 @@ else
             
             git clone git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
-            ./configure --enable-gpl --enable-libfdk_aac --enable-libmp3lame --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-version3
+            ./configure --prefix="$HOME/ffmpeg_build" --extra-cflags="-I$HOME/ffmpeg_build/include" \
+            --extra-ldflags="-L$HOME/ffmpeg_build/lib" --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl \
+            --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora \
+            --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
             make
             sudo make install
+            make distclean
+            hash -r
         fi
         sudo ln -s /usr/local/bin/ffmpeg /usr/bin/
     fi
