@@ -366,6 +366,13 @@ int poke(std::string ip) {
         return -1;
     }
     return connect(mysocket, (sockaddr*) & sip, sizeof (sip));*/
+    if (debug == 1) {
+        std::cout << "\n" + getTime() + " poking " + ip + "....";
+    }
     spawn poke = spawn("ping -c 1 " + ip, false, NULL, false, true);
-    return poke.getChildExitStatus();
+    int ces = poke.getChildExitStatus();
+    if (debug == 1) {
+        std::cout << "childExitStatus:" + std::string(itoa(ces)) + "\n";
+    }
+    return ces;
 }
