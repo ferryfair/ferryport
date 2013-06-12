@@ -970,7 +970,7 @@ camState camStateChange() {
             reconnectPollCountCopy--;
         }
         if (!immediateDisconnect) {
-            immediateDisconnect = true;
+            immediateDisconnect = false;
         } else {
             immediateDisconnect = false;
         }
