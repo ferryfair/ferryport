@@ -76,6 +76,7 @@ string corpNWGW;
 int manageNetwork = 0;
 string gpsDevice;
 string gpsSDeviceBaudrate;
+int reconnectDuration;
 int reconnectPollCount = 0;
 int reconnectPollCountCopy;
 string internetTestURL;
@@ -694,6 +695,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/manage-network", xc);
     node = xo->nodesetval->nodeTab[0];
     manageNetwork = atoi((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/reconnect-duration", xc);
+    node = xo->nodesetval->nodeTab[0];
+    reconnectDuration = atoi((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/reconnect-poll-count", xc);
     node = xo->nodesetval->nodeTab[0];
     reconnectPollCount = atoi((char*) xmlNodeGetContent(node));
@@ -1502,13 +1506,13 @@ void* networkManager(void* arg) {
     }
     time_t presentCheckTime;
     time_t previousCheckTime;
-    time_t waitInterval = 300;
+    time_t waitInterval = reconnectDuration;
     while (true) {
         previousCheckTime = presentCheckTime;
         time(&presentCheckTime);
         sleep((int) waitInterval);
-        if (waitInterval = presentCheckTime - previousCheckTime >= 300) {
-            waitInterval = 300;
+        if (waitInterval = presentCheckTime - previousCheckTime >= reconnectDuration) {
+            waitInterval = reconnectDuration;
             if (debug == 1) {
                 cout << "\n" + getTime() + "\n";
             }

@@ -12,6 +12,7 @@
     <stream-fps>5</stream-fps>
     <stream-resolution>160x120</stream-resolution>
     <manage-network>1</manage-network>
+    <reconnect-duration>2</reconnect-duration>
     <reconnect-poll-count>2</reconnect-poll-count>
     <mobile-broadband-connection>"Airtel Default"</mobile-broadband-connection>
     <internet-test-url>www.google.com</internet-test-url>
