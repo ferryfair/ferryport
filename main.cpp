@@ -113,8 +113,14 @@ string gpsCoordinates;
 pthread_t gpsUpdaterThread;
 
 pthread_t nwMgrThread;
+sem_t nwMgrSem;
+pthread_mutex_t nwMgrMutex;
+bool immediateDisconnect = false;
+bool internetConnection = true;
 time_t currentTime;
 
+bool masterReachable = false;
+pthread_mutex_t mrMutex;
 
 void run();
 void stop();
@@ -917,6 +923,22 @@ string reqSOAPService(string service, xmlChar* content) {
     return res;
 }
 
+bool connectToMaster() {
+    if (pthread_mutex_trylock(&nwMgrMutex) == 0) {
+        if (!masterReachable) {
+            sem_post(&nwMgrSem);
+            usleep(30000);
+            pthread_mutex_unlock(&nwMgrMutex);
+            pthread_mutex_lock(&nwMgrMutex);
+            pthread_mutex_unlock(&nwMgrMutex);
+        }
+    } else {
+        pthread_mutex_lock(&nwMgrMutex);
+        pthread_mutex_unlock(&nwMgrMutex);
+    }
+    return masterReachable;
+}
+
 camState camStateChange() {
     getCameras();
     ps = cs;
@@ -933,13 +955,31 @@ camState camStateChange() {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
+    pthread_mutex_lock(&mrMutex);
+    pthread_mutex_unlock(&mrMutex);
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
+        masterReachable = false;
         cout << "\n" + getTime() + " CONNECTION ERROR.";
+        if (reconnectPollCountCopy == 0) {
+            reconnectPollCountCopy = reconnectPollCount;
+            immediateDisconnect = false;
+            cout << "Trying to connect to master....\n";
+            connectToMaster();
+        } else {
+            reconnectPollCountCopy--;
+        }
+        if (!immediateDisconnect) {
+            immediateDisconnect = false;
+        } else {
+            immediateDisconnect = false;
+        }
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
     }
+    reconnectPollCountCopy = reconnectPollCount;
+    immediateDisconnect = false;
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPResponse: " + response + "\n";
         fflush(stdout);
@@ -1062,6 +1102,7 @@ void run() {
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
             if (manageNetwork == 1) {
+                sem_init(&nwMgrSem, 0, 0);
                 pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
             }
             writeConfigValue("pid", string(itoa(rootProcess)));
@@ -1507,35 +1548,31 @@ void* networkManager(void* arg) {
         cout << "\n" + getTime() + " network manager started.\n";
         fflush(stdout);
     }
-    time_t presentCheckTime;
-    time_t previousCheckTime;
-    time_t waitInterval = 300;
     while (true) {
-        previousCheckTime = presentCheckTime;
-        time(&presentCheckTime);
-        sleep((int)waitInterval);
-        if (waitInterval = presentCheckTime - previousCheckTime >= 300) {
-            waitInterval = 300;
-            if (debug == 1) {
-                cout << "\n" + getTime() + "\n";
-            }
-            if (poke(internetTestURL) != 0) {
-                if (mobileBroadbandCon.length() > 0) {
-                    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
-                    if (ifup->getChildExitStatus() != 0) {
+        sem_wait(&nwMgrSem);
+        pthread_mutex_lock(&nwMgrMutex);
+        if(debug==1){
+            cout << "\n"+getTime()+"\n masterReachable ="+string(itoa((int)masterReachable))+";"
+                    "\n immediateDisconnect ="+string(itoa((int)immediateDisconnect))+";\n";
+        }
+        if (!masterReachable) {
+            pthread_mutex_lock(&mrMutex);
+            if (!immediateDisconnect) {
+                if (poke(internetTestURL) != 0) {
+                    if (mobileBroadbandCon.length() > 0) {
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                             fflush(stdout);
                         }
-                        spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
+                        spawn bbdisconnector = spawn("nmcli nm wwan off", false, NULL, false, true);
                         sleep(1);
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
                             fflush(stdout);
                         }
-                        spawn *ifenable = new spawn("nmcli nm wwan on", false, NULL, false, true);
+                        spawn bbconnector = spawn("nmcli nm wwan on", false, NULL, false, true);
                         sleep(5);
-                        int es = ifenable->getChildExitStatus();
+                        int es = bbconnector.getChildExitStatus();
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
                             fflush(stdout);
@@ -1547,13 +1584,13 @@ void* networkManager(void* arg) {
                                 fflush(stdout);
                             }
                         }
-                        delete ifdisable;
-                        delete ifenable;
+                        masterReachable = true;
                     }
-                    delete ifup;
                 }
             }
+            pthread_mutex_unlock(&mrMutex);
         }
+        pthread_mutex_unlock(&nwMgrMutex);
     }
 }
 
