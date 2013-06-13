@@ -1547,8 +1547,10 @@ void* networkManager(void* arg) {
                                 fflush(stdout);
                             }
                         }
+                        spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
                         delete ifdisable;
                         delete ifenable;
+                        delete ifup2;
                     }
                     delete ifup;
                 }
