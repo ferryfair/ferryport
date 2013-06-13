@@ -697,7 +697,7 @@ void readConfig() {
     manageNetwork = atoi((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/reconnect-duration", xc);
     node = xo->nodesetval->nodeTab[0];
-    reconnectDuration = atoi((char*) xmlNodeGetContent(node));
+    reconnectDuration = atoi((char*) xmlNodeGetContent(node))*60;
     xo = xmlXPathEvalExpression((xmlChar*) "/config/reconnect-poll-count", xc);
     node = xo->nodesetval->nodeTab[0];
     reconnectPollCount = atoi((char*) xmlNodeGetContent(node));
