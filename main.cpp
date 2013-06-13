@@ -1488,18 +1488,11 @@ void* gpsLocationUpdater(void* arg) {
 }
 
 void test() {
-    //videoSegmenter("wr3libvorbis.ogg", 10);
-    //spawn ps = spawn("ffmpeg -f video4linux2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.25:25333/venkat/test0", false);
-    char buf[2000];
-    /*read(ps.cpstdout, buf, 2000);
-    cout << buf;*/
-    //read(ps.cpstderr, buf, 2000);
-    cout << buf;
-    char ch[10] = "q";
-    //write(ps.cpstdin, ch, 10);
-    debug = 1;
-    int i = poke("8.8.8.8");
-    printf("%d", i);
+    readConfig();
+    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+    char buf[100];
+    read(ifup->cpstderr, buf, 100);
+    printf("%s", buf);
 }
 
 void* networkManager(void* arg) {
@@ -1513,7 +1506,7 @@ void* networkManager(void* arg) {
     while (true) {
         previousCheckTime = presentCheckTime;
         time(&presentCheckTime);
-        sleep((int)waitInterval);
+        sleep((int) waitInterval);
         if (waitInterval = presentCheckTime - previousCheckTime >= 300) {
             waitInterval = 300;
             if (debug == 1) {
@@ -1548,6 +1541,14 @@ void* networkManager(void* arg) {
                             }
                         }
                         spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+                        if (debug == 1) {
+                            cout << "\n" + getTime() + " nmcli error:";
+                            char buf[100];
+                            read(ifup->cpstderr, buf, 100);
+                            printf("%s", buf);
+                            cout << "\n";
+                            fflush(stdout);
+                        }
                         delete ifdisable;
                         delete ifenable;
                         delete ifup2;

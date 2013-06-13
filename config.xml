@@ -13,7 +13,7 @@
     <stream-resolution>160x120</stream-resolution>
     <manage-network>1</manage-network>
     <reconnect-poll-count>2</reconnect-poll-count>
-    <mobile-broadband-connection>airtel</mobile-broadband-connection>
+    <mobile-broadband-connection>"Airtel Default"</mobile-broadband-connection>
     <internet-test-url>www.google.com</internet-test-url>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <gps-device>/dev/ttyS0</gps-device>
