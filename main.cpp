@@ -1294,6 +1294,8 @@ void configure() {
     cout << "\ninternet-test-url:\t" + internetTestURL;
     cout << "\nmobile-broadband-connection:\t" + mobileBroadbandCon;
     cout << "\ncorporate-network-gateway:\t" + corpNWGW;
+    cout << "\ngps-device:\t" + gpsDevice;
+    cout << "\ngps-sdevice-baudrate:\t" + gpsSDeviceBaudrate;
     cout << "\ndebug:\t" + string(itoa(debug));
     cout << "\n-------------------------\nSet or Add configuration property\n";
     string pn;
