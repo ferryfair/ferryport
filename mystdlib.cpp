@@ -98,6 +98,7 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
                 break;
             }
         } else if (cmdv[i][0] == '\'') {
+            arg=arg.substr(1);
             i++;
             while (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] != '\'') {
                 arg += " " + cmdv[i];
@@ -105,6 +106,7 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
             }
             if (i < cmdv.size() && cmdv[i][cmdv[i].length() - 1] == '\'') {
                 arg += " " + cmdv[i];
+                arg=arg.substr(0,arg.length()-1);
                 i++;
             } else {
                 validcmd = false;

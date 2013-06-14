@@ -9,8 +9,8 @@
     <bootup>true</bootup>
     <record-fps>15</record-fps>
     <record-resolution>320x240</record-resolution>
-    <stream-fps>5</stream-fps>
-    <stream-resolution>160x120</stream-resolution>
+    <stream-fps>8</stream-fps>
+    <stream-resolution>240x180</stream-resolution>
     <manage-network>1</manage-network>
     <reconnect-duration>2</reconnect-duration>
     <reconnect-poll-count>2</reconnect-poll-count>

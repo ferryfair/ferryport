@@ -1520,7 +1520,7 @@ void* networkManager(void* arg) {
             }
             if (poke(internetTestURL) != 0) {
                 if (mobileBroadbandCon.length() > 0) {
-                    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+                    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
