@@ -92,6 +92,7 @@ string srcFolder = "/usr/local/src/" + string(APP_NAME);
 time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
 int SOAPServiceReqCount = 0;
+int ferr;
 
 bool allCams = false;
 string reqCam;
@@ -1058,6 +1059,14 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
 void run() {
     secondChild = getpid();
     readConfig();
+    if (runMode.compare("daemon") == 0) {
+        if (debug == 1) {
+            dup2(ferr, 1);
+        } else {
+            close(1);
+        }
+        dup2(ferr, 2);
+    }
     if (securityKey.length() == 0) {
         cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
     } else {
@@ -1402,9 +1411,9 @@ void signalHandler(int signal_number) {
             if (secondChild == getpid()) {
 
             } else if (firstChild == getpid()) {
-                log("derror", "second child exited");
+                cerr << "\n" + getTime() + " derror: secondchild exited.\n";
             } else if (rootProcess == getpid()) {
-                log("derror", "first child process exited.");
+                cerr << "\n" + getTime() + " derror: first child exited.\n";
             }
         }
         pid_t pid;
@@ -1494,11 +1503,11 @@ void* gpsLocationUpdater(void* arg) {
 }
 
 void test() {
-    readConfig();
-    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+    spawn *ifup = new spawn("nmcli con up id 'Wired connection 1' --timeout 30", false, NULL, false, true);
     char buf[100];
     read(ifup->cpstderr, buf, 100);
     printf("%s", buf);
+    fflush(stdout);
 }
 
 void* networkManager(void* arg) {
@@ -1567,6 +1576,7 @@ void* networkManager(void* arg) {
 }
 
 int main(int argc, char** argv) {
+    ferr = open(logFile.c_str(), O_WRONLY | O_APPEND);
     runningProcess = atoi(readConfigValue("pid").c_str());
     struct sigaction signalaction_struct;
     memset(&signalaction_struct, 0, sizeof (signalaction_struct));
