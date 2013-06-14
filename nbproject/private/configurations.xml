@@ -28,8 +28,9 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" -i</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -s normal</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -t</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -s daemon</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -t</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -s daemon</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

@@ -93,6 +93,8 @@ time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
 int SOAPServiceReqCount = 0;
 int ferr;
+int dupstdout;
+int dupstderr;
 
 bool allCams = false;
 string reqCam;
@@ -1062,10 +1064,7 @@ void run() {
     if (runMode.compare("daemon") == 0) {
         if (debug == 1) {
             dup2(ferr, 1);
-        } else {
-            close(1);
         }
-        dup2(ferr, 2);
     }
     if (securityKey.length() == 0) {
         cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
@@ -1366,6 +1365,8 @@ void secondFork() {
         wait(&status);
         secondFork();
     } else {
+        dup2(ferr, 2);
+        close(1);
         prctl(PR_SET_PDEATHSIG, SIGKILL);
         run();
     }
@@ -1378,6 +1379,8 @@ void firstFork() {
         wait(&status);
         firstFork();
     } else {
+        dup2(ferr, 2);
+        close(1);
         prctl(PR_SET_PDEATHSIG, SIGKILL);
         secondFork();
     }
@@ -1406,6 +1409,11 @@ void signalHandler(int signal_number) {
         close(fd);
         munmap(file_memory, 1024);
     }
+    if (signal_number == SIGTERM || signal_number == SIGINT) {
+        if (getpid() == rootProcess) {
+            cerr << "\n" + getTime() + " " + string(APP_NAME) + " terminated by " + string(itoa(signal_number)) + " number.\n";
+        }
+    }
     if (signal_number == SIGCHLD) {
         if (runMode.compare("daemon") == 0) {
             if (secondChild == getpid()) {
@@ -1427,6 +1435,8 @@ void signalHandler(int signal_number) {
         child_exit_status = status;
     }
     pkilled = true;
+    fflush(stdout);
+    fflush(stderr);
 }
 
 void stopRunningProcess() {
@@ -1577,6 +1587,8 @@ void* networkManager(void* arg) {
 
 int main(int argc, char** argv) {
     ferr = open(logFile.c_str(), O_WRONLY | O_APPEND);
+    dupstdout = dup(1);
+    dupstderr = dup(2);
     runningProcess = atoi(readConfigValue("pid").c_str());
     struct sigaction signalaction_struct;
     memset(&signalaction_struct, 0, sizeof (signalaction_struct));
@@ -1612,6 +1624,8 @@ int main(int argc, char** argv) {
                 opt = string(optarg);
                 if (opt.compare("daemon") == 0) {
                     runMode = opt;
+                    close(1);
+                    dup2(ferr, 2);
                     firstFork();
                 } else if (opt.compare("normal") == 0) {
                     run();
