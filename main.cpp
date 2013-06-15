@@ -1365,8 +1365,7 @@ void secondFork() {
         wait(&status);
         secondFork();
     } else {
-        dup2(ferr, 2);
-        close(1);
+        secondChild = getpid();
         prctl(PR_SET_PDEATHSIG, SIGKILL);
         run();
     }
@@ -1379,8 +1378,7 @@ void firstFork() {
         wait(&status);
         firstFork();
     } else {
-        dup2(ferr, 2);
-        close(1);
+        firstChild = getpid();
         prctl(PR_SET_PDEATHSIG, SIGKILL);
         secondFork();
     }

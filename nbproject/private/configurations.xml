@@ -25,12 +25,12 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -i</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -s normal</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -t</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -s daemon</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -i</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -s daemon</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -i</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
