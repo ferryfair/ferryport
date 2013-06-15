@@ -285,7 +285,7 @@ public:
         string rfa = records[rIndex].recordFile;
         if (records[rIndex].newState == RECORD_STREAM) {
             stopRecord(rIndex);
-            string cmd = "ffmpeg -re -i " + rfa + " -vcodec libx264 -ab 128k -ac 2 -ar 44100 -r 25 -s 320x240 -vb 660k -f flv " + sa;
+            string cmd = "ffmpeg -re -i " + rfa + " -r " + streamfps + " -s " + streamResolution + " -f flv " + sa;
             records[rIndex].recorder = spawn(cmd, true, NULL, false);
             if (debug == 1) {
                 cout << "\n" + getTime() + " setRecordState: " + cmd + " :" + string(itoa(records[rIndex].recorder.cpid)) + "\n";
@@ -1532,9 +1532,6 @@ void* networkManager(void* arg) {
         sleep((int) waitInterval);
         if (waitInterval = presentCheckTime - previousCheckTime >= reconnectDuration) {
             waitInterval = reconnectDuration;
-            if (debug == 1) {
-                cout << "\n" + getTime() + "\n";
-            }
             if (poke(internetTestURL) != 0) {
                 if (mobileBroadbandCon.length() > 0) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
