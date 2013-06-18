@@ -117,6 +117,8 @@ string gpsCoordinates;
 pthread_t gpsUpdaterThread;
 
 pthread_t nwMgrThread;
+string modemInode = "/dev/ttyUSB0";
+
 time_t currentTime;
 
 
@@ -1502,7 +1504,7 @@ void* gpsLocationUpdater(void* arg) {
             }
             time(&gpsReadEnd);
             buf[i] = '\0';
-            gpsCoordinates = "ttyS0:" + string(buf);
+            gpsCoordinates = gpsDevice + ":" + string(buf);
         }
     }
     if (debug == 1) {
@@ -1516,6 +1518,85 @@ void test() {
     read(ifup->cpstderr, buf, 100);
     printf("%s", buf);
     fflush(stdout);
+}
+
+bool signalStrengthOK() {
+    int modemfd = open(modemInode.c_str(), O_RDWR);
+    if (modemfd) {
+        FILE* modemfp = fdopen(modemfd, "r");
+        lockf(modemfd, F_TLOCK, 100);
+        write(modemfd, "AT+CSQ\r", 7);
+        char op;
+        char opstamp[] = "+CSQ: 18,99\nOK\n";
+        bool rdComplete = false;
+        int i = 0;
+        bool seqstart = false;
+        char buf[50];
+        if (debug == 1) {
+            cout << "\n" + getTime() + " signalStrengthOK:op:";
+            fflush(stdout);
+        }
+        while (!rdComplete) {
+            op = getc(modemfp);
+            if (debug == 1) {
+                putchar(op);
+                fflush(stdout);
+            }
+            if (op == '+') {
+                seqstart = true;
+            } else if (op == '\n') {
+                seqstart = false;
+            }
+            if (seqstart) {
+                if (i >= 5 && op != ',') {
+                    buf[i - 5] = op;
+                }
+                if (op == ',') {
+                    buf[i] = '\0';
+                    rdComplete = true;
+                }
+                i++;
+            }
+        }
+        if (debug == 1) {
+            cout << ":buf:" + string(buf) + "\n";
+            fflush(stdout);
+        }
+        int sigStrength = atoi(buf);
+        lockf(modemfd, F_ULOCK, 100);
+        close(modemfd);
+        if (sigStrength > 11) {
+            return true;
+        }
+    } else {
+        cerr << "\n" + getTime() + "singalStrengthOK: unable to open modem inode.\n";
+        return false;
+    }
+    return false;
+}
+
+bool dettachGPRS() {
+    int modemfd = open(modemInode.c_str(), O_RDWR);
+    if (modemfd) {
+        lockf(modemfd, F_TLOCK, 100);
+        write(modemfd, "AT+CGATT=0\r", 11);
+        char buf[20];
+        read(modemfd, buf, 4);
+        string result = string(buf);
+        if (debug == 1) {
+            cout << "\n" + getTime() + " dettachGPRS():result:" + result + "\n";
+            fflush(stdout);
+        }
+        lockf(modemfd, F_ULOCK, 100);
+        close(modemfd);
+        if (result.find("OK")>-1) {
+            return true;
+        }
+    } else {
+        cerr << "\n" + getTime() + "dettachGPRS(): unable to open modem inode.\n";
+        return false;
+    }
+    return false;
 }
 
 void* networkManager(void* arg) {
@@ -1544,6 +1625,12 @@ void* networkManager(void* arg) {
                         }
                         spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
                         sleep(1);
+waitforsignal:
+                        if (!signalStrengthOK()) {
+                            sleep(1);
+                            goto waitforsignal;
+                        }
+                        dettachGPRS();
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
                             fflush(stdout);

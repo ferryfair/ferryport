@@ -9,6 +9,7 @@
 #define	MYSTDLIB_H
 #include <sys/types.h>
 #include <string>
+#include <signal.h>
 
 void initTermios(int echo);
 void resetTermios(void);
@@ -42,6 +43,7 @@ public:
     spawn();
     spawn(std::string command, bool daemon = false, void (*onStopHandler)() = NULL, bool freeChild = false, bool block = false);
     int getChildExitStatus();
+    int pkill(int signal = SIGTERM);
 };
 #endif	/* MYSTDLIB_H */
 
