@@ -1521,11 +1521,11 @@ void test() {
 }
 
 bool signalStrengthOK() {
-    int modemfd = open(modemInode.c_str(), O_RDWR);
-    if (modemfd) {
-        FILE* modemfp = fdopen(modemfd, "r");
-        lockf(modemfd, F_TLOCK, 100);
-        write(modemfd, "AT+CSQ\r", 7);
+    FILE* modemrfp = fopen(modemInode.c_str(), "r");
+    FILE* modemwfp = fopen(modemInode.c_str(), "w");
+    if (modemrfp && modemwfp) {
+        char atcmd[]="AT+CSQ\r";
+        fwrite(atcmd,1,7,modemwfp);
         char op;
         char opstamp[] = "+CSQ: 18,99\nOK\n";
         bool rdComplete = false;
@@ -1537,7 +1537,7 @@ bool signalStrengthOK() {
             fflush(stdout);
         }
         while (!rdComplete) {
-            op = getc(modemfp);
+            op = (char) getc(modemrfp);
             if (debug == 1) {
                 putchar(op);
                 fflush(stdout);
@@ -1563,8 +1563,8 @@ bool signalStrengthOK() {
             fflush(stdout);
         }
         int sigStrength = atoi(buf);
-        lockf(modemfd, F_ULOCK, 100);
-        close(modemfd);
+        fclose(modemrfp);
+        fclose(modemwfp);
         if (sigStrength > 11) {
             return true;
         }
@@ -1576,19 +1576,20 @@ bool signalStrengthOK() {
 }
 
 bool dettachGPRS() {
-    int modemfd = open(modemInode.c_str(), O_RDWR);
-    if (modemfd) {
-        lockf(modemfd, F_TLOCK, 100);
-        write(modemfd, "AT+CGATT=0\r", 11);
+    FILE* modemwfp = fopen(modemInode.c_str(), "w");
+    FILE* modemrfp = fopen(modemInode.c_str(), "r");
+    if (modemwfp) {
+        char atcmd[]="AT+CGATT=0\r";
+        fwrite(atcmd,1,11,modemwfp);
         char buf[20];
-        read(modemfd, buf, 4);
+        fread(buf,1,4,modemrfp);
         string result = string(buf);
         if (debug == 1) {
             cout << "\n" + getTime() + " dettachGPRS():result:" + result + "\n";
             fflush(stdout);
         }
-        lockf(modemfd, F_ULOCK, 100);
-        close(modemfd);
+        fclose(modemrfp);
+        fclose(modemwfp);
         if (result.find("OK")>-1) {
             return true;
         }
