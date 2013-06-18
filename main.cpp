@@ -1541,7 +1541,7 @@ bool signalStrengthOK() {
         struct readFileArgs rfa;
         rfa.buf = (char*) malloc(sizeof (char)*17);
         rfa.fp = modemrfp;
-        rfa.size = 17;
+        rfa.size = 11;
         pthread_t readThread;
         pthread_create(&readThread, NULL, &readFileThread, &rfa);
         char atcmd[] = "AT+CSQ\r";
@@ -1572,7 +1572,7 @@ bool signalStrengthOK() {
                 if (i >= 5 && op != ',') {
                     rfa.buf[i - 5] = op;
                 }
-                if (op == ',') {
+                if (op == ',' || op=='\0') {
                     rfa.buf[i] = '\0';
                     rdComplete = true;
                 }
