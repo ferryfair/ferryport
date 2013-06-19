@@ -65,11 +65,19 @@
           <incDir>
             <pElem>/usr/include/libxml2</pElem>
             <pElem>.</pElem>
+            <pElem>/usr/include/dbus-1.0</pElem>
+            <pElem>/usr/include/glib-2.0</pElem>
+            <pElem>/usr/lib/i386-linux-gnu/glib-2.0/include</pElem>
+            <pElem>/usr/lib/i386-linux-gnu/dbus-1.0/include</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <linkerLibItems>
-            <linkerOptionItem>-lxml2 -lpthread</linkerOptionItem>
+            <linkerOptionItem>-lxml2</linkerOptionItem>
+            <linkerOptionItem>-ldbus-1</linkerOptionItem>
+            <linkerOptionItem>-ldbus-glib-1</linkerOptionItem>
+            <linkerOptionItem>-lpthread</linkerOptionItem>
+            <linkerOptionItem>-Wall -Wextra</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
