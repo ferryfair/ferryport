@@ -1564,8 +1564,6 @@ bool signalStrengthOK() {
     g_strfreev(name_list);
 
     g_object_unref(proxy);
-    fflush(stdout);
-    fflush(stdout);
     return 0;
 }
 
