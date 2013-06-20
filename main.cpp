@@ -118,6 +118,7 @@ time_t gpsReadEnd;
 string gpsCoordinates;
 pthread_t gpsUpdaterThread;
 
+/*modem related variables*/
 pthread_t nwMgrThread;
 string modemInode = "/dev/ttyUSB0";
 
