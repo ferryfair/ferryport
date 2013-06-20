@@ -7,6 +7,7 @@
     <stream-port>25222</stream-port>
     <namespace>PortalvisionService</namespace>
     <bootup>true</bootup>
+    <!--bootupDescription>it true application starts at system startup else not</bootupDescription-->
     <record-fps>15</record-fps>
     <record-resolution>320x240</record-resolution>
     <stream-fps>8</stream-fps>
