@@ -378,13 +378,16 @@ int poke(std::string ip) {
         std::cout << "\n" + getTime() + " poking " + ip + "....";
         fflush(stdout);
     }
-    spawn poke = spawn("ping -c 1 " + ip, false, NULL, false, true);
-    int ces = poke.getChildExitStatus();
+    ip = GetPrimaryIp();
     if (debug == 1) {
-        std::cout << "childExitStatus:" + std::string(itoa(ces)) + "\n";
+        std::cout << "with ipadress: " + ip + "\n";
         fflush(stdout);
     }
-    return ces;
+    if (ip.length() == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 int getIp() {

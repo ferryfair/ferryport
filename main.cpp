@@ -938,19 +938,19 @@ camState camStateChange() {
         strGPS = gpsCoordinates;
     }
     fflush(stdout);
-    string IP=GetPrimaryIp();
-    if(IP.compare(currentIP)!=0){
-        currentIP=IP;
+    string IP = GetPrimaryIp();
+    if (IP.compare(currentIP) != 0) {
+        currentIP = IP;
         csList::setStateAllCams(CAM_RECORD);
         record();
-    }else if(IP.length()==0){
+    } else if (IP.length() == 0) {
         cerr << "\n" + getTime() + " CONNECTION ERROR.";
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
     }
-    string strNetwork="ip:"+currentIP+",signalstrength:NA";
-    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>"+strNetwork+"</network></GetDataChangeBySystemId>";
+    string strNetwork = "ip:" + currentIP + ",signalstrength:NA";
+    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>" + strNetwork + "</network></GetDataChangeBySystemId>";
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
@@ -1550,7 +1550,9 @@ void* networkManager(void* arg) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
                         if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
+                            char ifuperr[100];
+                            read(ifup->cpstderr, ifuperr, 100);
+                            cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". disabling mobile broadband.\n";
                             fflush(stdout);
                         }
                         spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
@@ -1585,6 +1587,11 @@ void* networkManager(void* arg) {
                         delete ifdisable;
                         delete ifenable;
                         delete ifup2;
+                    }else{
+                        if (debug == 1) {
+                                cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
+                                fflush(stdout);
+                            }
                     }
                     delete ifup;
                 }
