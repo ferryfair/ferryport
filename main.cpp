@@ -1520,113 +1520,6 @@ void test() {
     fflush(stdout);
 }
 
-struct readFileArgs {
-    FILE* fp;
-    int size;
-    char *buf;
-};
-
-void * readFileThread(void* args) {
-    struct readFileArgs* rfa = (readFileArgs*) args;
-    FILE* fp = (FILE*) rfa->fp;
-    int size = rfa->size;
-    char * buf = rfa->buf;
-    fread(buf, 1, size, fp);
-}
-
-bool signalStrengthOK() {
-    FILE* modemrfp = fopen(modemInode.c_str(), "r");
-    FILE* modemwfp = fopen(modemInode.c_str(), "w");
-    if (modemrfp && modemwfp) {
-        struct readFileArgs rfa;
-        rfa.buf = (char*) malloc(sizeof (char)*17);
-        rfa.fp = modemrfp;
-        rfa.size = 11;
-        pthread_t readThread;
-        pthread_create(&readThread, NULL, &readFileThread, &rfa);
-        char atcmd[] = "AT+CSQ\r";
-        fwrite(atcmd, 1, 17, modemwfp);
-        char op;
-        char opstamp[] = "+CSQ: 18,99\nOK\n";
-        bool rdComplete = false;
-        int i = 0;
-        bool seqstart = false;
-        if (debug == 1) {
-            cout << "\n" + getTime() + " signalStrengthOK:op:";
-            fflush(stdout);
-        }
-        pthread_join(readThread, NULL);
-        int j = 0;
-        while (!rdComplete) {
-            op = (char) rfa.buf[j];
-            if (debug == 1) {
-                putchar(op);
-                fflush(stdout);
-            }
-            if (op == '+') {
-                seqstart = true;
-            } else if (op == '\n') {
-                seqstart = false;
-            }
-            if (seqstart) {
-                if (i >= 5 && op != ',') {
-                    rfa.buf[i - 5] = op;
-                }
-                if (op == ',' || op=='\0') {
-                    rfa.buf[i] = '\0';
-                    rdComplete = true;
-                }
-                i++;
-            }
-            j++;
-        }
-        if (debug == 1) {
-            cout << ":buf:" + string(rfa.buf) + "\n";
-            fflush(stdout);
-        }
-        int sigStrength = atoi(rfa.buf);
-        fclose(modemrfp);
-        fclose(modemwfp);
-        if (sigStrength > 11) {
-            return true;
-        }
-    } else {
-        cerr << "\n" + getTime() + "singalStrengthOK: unable to open modem inode.\n";
-        return false;
-    }
-    return false;
-}
-
-bool dettachGPRS() {
-    FILE* modemwfp = fopen(modemInode.c_str(), "w");
-    FILE* modemrfp = fopen(modemInode.c_str(), "r");
-    if (modemwfp) {
-        struct readFileArgs rfa;
-        rfa.buf = (char*) malloc(sizeof (char)*5);
-        rfa.fp = modemrfp;
-        rfa.size = 17;
-        pthread_t readThread;
-        pthread_create(&readThread, NULL, &readFileThread, &rfa);
-        char atcmd[] = "AT+CGATT=0\r";
-        fwrite(atcmd, 1, 11, modemwfp);
-        pthread_join(readThread, NULL);
-        string result = string(rfa.buf);
-        if (debug == 1) {
-            cout << "\n" + getTime() + " dettachGPRS():result:" + result + "\n";
-            fflush(stdout);
-        }
-        fclose(modemrfp);
-        fclose(modemwfp);
-        if (result.find("OK")>-1) {
-            return true;
-        }
-    } else {
-        cerr << "\n" + getTime() + "dettachGPRS(): unable to open modem inode.\n";
-        return false;
-    }
-    return false;
-}
-
 void* networkManager(void* arg) {
     if (debug = 1) {
         cout << "\n" + getTime() + " network manager started.\n";
@@ -1651,12 +1544,6 @@ void* networkManager(void* arg) {
                         }
                         spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
                         sleep(1);
-waitforsignal:
-                        if (!signalStrengthOK()) {
-                            sleep(1);
-                            goto waitforsignal;
-                        }
-                        dettachGPRS();
                         if (debug == 1) {
                             cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
                             fflush(stdout);
