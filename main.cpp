@@ -118,6 +118,7 @@ pthread_t gpsUpdaterThread;
 
 pthread_t nwMgrThread;
 string modemInode = "/dev/ttyUSB0";
+string currentIP;
 
 time_t currentTime;
 
@@ -937,14 +938,26 @@ camState camStateChange() {
         strGPS = gpsCoordinates;
     }
     fflush(stdout);
-    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
+    string IP=GetPrimaryIp();
+    if(IP.compare(currentIP)!=0){
+        currentIP=IP;
+        csList::setStateAllCams(CAM_RECORD);
+        record();
+    }else if(IP.length()==0){
+        cerr << "\n" + getTime() + " CONNECTION ERROR.";
+        csList::setStateAllCams(CAM_RECORD);
+        cs = CAM_NEW_STATE;
+        return cs;
+    }
+    string strNetwork="ip:"+currentIP+",signalstrength:NA";
+    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>"+strNetwork+"</network></GetDataChangeBySystemId>";
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
-        cout << "\n" + getTime() + " CONNECTION ERROR.";
+        cerr << "\n" + getTime() + " CONNECTION ERROR.";
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
@@ -1513,10 +1526,8 @@ void* gpsLocationUpdater(void* arg) {
 }
 
 void test() {
-    spawn *ifup = new spawn("nmcli con up id 'Wired connection 1' --timeout 30", false, NULL, false, true);
-    char buf[100];
-    read(ifup->cpstderr, buf, 100);
-    printf("%s", buf);
+    char ipAddr[16];
+    cout << GetPrimaryIp();
     fflush(stdout);
 }
 
