@@ -1552,46 +1552,36 @@ void* networkManager(void* arg) {
                         if (debug == 1) {
                             char ifuperr[100];
                             read(ifup->cpstderr, ifuperr, 100);
-                            cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". disabling mobile broadband.\n";
+                            cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
                             fflush(stdout);
                         }
-                        spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
-                        sleep(1);
-                        if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
-                            fflush(stdout);
-                        }
-                        spawn *ifenable = new spawn("nmcli nm wwan on", false, NULL, false, true);
-                        sleep(5);
-                        int es = ifenable->getChildExitStatus();
-                        if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
-                            fflush(stdout);
-                        }
-                        if (WIFEXITED(es)) {
-                            int ees = WEXITSTATUS(es);
-                            if (debug == 1) {
-                                cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
-                                fflush(stdout);
-                            }
-                        }
+                        sleep(10);
                         spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
-                        if (debug == 1) {
-                            cout << "\n" + getTime() + " nmcli error:";
-                            char buf[100];
-                            read(ifup->cpstderr, buf, 100);
-                            printf("%s", buf);
-                            cout << "\n";
-                            fflush(stdout);
-                        }
-                        delete ifdisable;
-                        delete ifenable;
-                        delete ifup2;
-                    }else{
-                        if (debug == 1) {
-                                cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
+                        if (ifup2->getChildExitStatus() != 0) {
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " nmcli stderror:";
+                                char buf[100];
+                                read(ifup->cpstderr, buf, 100);
+                                printf("%s", buf);
+                                cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
                                 fflush(stdout);
                             }
+                        } else {
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " nmcli:";
+                                char buf[200];
+                                read(ifup->cpstdout, buf, 200);
+                                printf("%s", buf);
+                                cout << "\n";
+                                fflush(stdout);
+                            }
+                        }
+                        delete ifup2;
+                    } else {
+                        if (debug == 1) {
+                            cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
+                            fflush(stdout);
+                        }
                     }
                     delete ifup;
                 }
