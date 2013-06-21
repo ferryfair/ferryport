@@ -61,7 +61,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lxml2 -ldbus-1 -ldbus-glib-1 -lpthread -Wall -Wextra
+LDLIBSOPTIONS=-lxml2 -lpthread
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -74,52 +74,52 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/remotedevicecontroller: ${OBJECTFILES
 ${OBJECTDIR}/ClientSocket.o: ClientSocket.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/ClientSocket.o ClientSocket.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/ClientSocket.o ClientSocket.cpp
 
 ${OBJECTDIR}/Multimedia.o: Multimedia.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Multimedia.o Multimedia.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/Multimedia.o Multimedia.cpp
 
 ${OBJECTDIR}/ServerSocket.o: ServerSocket.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/ServerSocket.o ServerSocket.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/ServerSocket.o ServerSocket.cpp
 
 ${OBJECTDIR}/Socket.o: Socket.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/Socket.o Socket.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/Socket.o Socket.cpp
 
 ${OBJECTDIR}/debug.o: debug.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/debug.o debug.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/debug.o debug.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
 ${OBJECTDIR}/myconverters.o: myconverters.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/myconverters.o myconverters.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/myconverters.o myconverters.cpp
 
 ${OBJECTDIR}/mycurl.o: mycurl.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/mycurl.o mycurl.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/mycurl.o mycurl.cpp
 
 ${OBJECTDIR}/mystdlib.o: mystdlib.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/mystdlib.o mystdlib.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/mystdlib.o mystdlib.cpp
 
 ${OBJECTDIR}/myxml.o: myxml.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -I/usr/include/dbus-1.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/dbus-1.0/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/myxml.o myxml.cpp
+	$(COMPILE.cc) -g -I/usr/include/libxml2 -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/myxml.o myxml.cpp
 
 # Subprojects
 .build-subprojects:
