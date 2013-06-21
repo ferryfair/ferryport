@@ -1632,7 +1632,6 @@ void* networkManager(void* arg) {
         cout << "\n" + getTime() + " network manager started.\n";
         fflush(stdout);
     }
-    char buf[100];
     time_t presentCheckTime;
     time_t previousCheckTime;
     time_t waitInterval = reconnectDuration;
@@ -1647,8 +1646,7 @@ void* networkManager(void* arg) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
                         if (debug == 1) {
-                            read(ifup->cpstderr, buf, 100);
-                            cout << "\n" + getTime() + " networkManager: nmcli exit code=" + string(itoa(ifup->getChildExitStatus())) + ",error msg=" + string(buf) + ".\nNow disabling mobile broadband.\n";
+                            cout << "\n" + getTime() + " networkManager: disabling mobile broadband.\n";
                             fflush(stdout);
                         }
                         spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
@@ -1680,9 +1678,10 @@ waitforsignal:
                         spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
                         if (debug == 1) {
                             cout << "\n" + getTime() + " nmcli error:";
+                            char buf[100];
                             read(ifup->cpstderr, buf, 100);
                             printf("%s", buf);
-                            cout << ",exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
+                            cout << "\n";
                             fflush(stdout);
                         }
                         delete ifdisable;
@@ -1693,10 +1692,6 @@ waitforsignal:
                 }
             }
         }
-    }
-    if (debug = 1) {
-        cout << "\n" + getTime() + " network manager exited.\n";
-        fflush(stdout);
     }
 }
 
