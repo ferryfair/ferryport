@@ -72,6 +72,7 @@
           </incDir>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/remotedevicecontroller</output>
           <linkerLibItems>
             <linkerOptionItem>-lxml2</linkerOptionItem>
             <linkerOptionItem>-ldbus-1</linkerOptionItem>

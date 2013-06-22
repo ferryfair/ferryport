@@ -120,6 +120,7 @@ pthread_t gpsUpdaterThread;
 
 pthread_t nwMgrThread;
 string modemInode = "/dev/ttyUSB0";
+string currentIP;
 
 time_t currentTime;
 
@@ -940,14 +941,26 @@ camState camStateChange() {
         strGPS = gpsCoordinates;
     }
     fflush(stdout);
-    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS></GetDataChangeBySystemId>";
+    string IP = GetPrimaryIp();
+    if (IP.compare(currentIP) != 0) {
+        currentIP = IP;
+        csList::setStateAllCams(CAM_RECORD);
+        record();
+    } else if (IP.length() == 0) {
+        cerr << "\n" + getTime() + " CONNECTION ERROR.";
+        csList::setStateAllCams(CAM_RECORD);
+        cs = CAM_NEW_STATE;
+        return cs;
+    }
+    string strNetwork = "ip:" + currentIP + ",signalstrength:NA";
+    string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>" + strNetwork + "</network></GetDataChangeBySystemId>";
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
-        cout << "\n" + getTime() + " CONNECTION ERROR.";
+        cerr << "\n" + getTime() + " CONNECTION ERROR.";
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
@@ -1612,7 +1625,6 @@ void* networkManager(void* arg) {
         cout << "\n" + getTime() + " network manager started.\n";
         fflush(stdout);
     }
-    char buf[100];
     time_t presentCheckTime;
     time_t previousCheckTime;
     time_t waitInterval = reconnectDuration;
@@ -1623,60 +1635,48 @@ void* networkManager(void* arg) {
         if (waitInterval = presentCheckTime - previousCheckTime >= reconnectDuration) {
             waitInterval = reconnectDuration;
             if (poke(internetTestURL) != 0) {
+                sleep(5);
                 if (mobileBroadbandCon.length() > 0) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
                         if (debug == 1) {
-                            read(ifup->cpstderr, buf, 100);
-                            cout << "\n" + getTime() + " networkManager: nmcli exit code=" + string(itoa(ifup->getChildExitStatus())) + ",error msg=" + string(buf) + ".\nNow disabling mobile broadband.\n";
+                            char ifuperr[100];
+                            read(ifup->cpstderr, ifuperr, 100);
+                            cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
                             fflush(stdout);
                         }
-                        spawn *ifdisable = new spawn("nmcli nm wwan off", false, NULL, false, true);
-                        sleep(1);
-waitforsignal:
-                        if (!signalStrengthOK()) {
-                            sleep(1);
-                            goto waitforsignal;
-                        }
-                        dettachGPRS();
-                        if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: enabling mobile broadband.\n";
-                            fflush(stdout);
-                        }
-                        spawn *ifenable = new spawn("nmcli nm wwan on", false, NULL, false, true);
-                        sleep(5);
-                        int es = ifenable->getChildExitStatus();
-                        if (debug == 1) {
-                            cout << "\n" + getTime() + " networkManager: es=" + string(itoa(es)) + "\n";
-                            fflush(stdout);
-                        }
-                        if (WIFEXITED(es)) {
-                            int ees = WEXITSTATUS(es);
+                        sleep(10);
+                        spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+                        if (ifup2->getChildExitStatus() != 0) {
                             if (debug == 1) {
-                                cout << "\n" + getTime() + " networkManager: ees=" + string(itoa(ees)) + "\n";
+                                cout << "\n" + getTime() + " nmcli stderror:";
+                                char buf[100];
+                                read(ifup->cpstderr, buf, 100);
+                                printf("%s", buf);
+                                cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
+                                fflush(stdout);
+                            }
+                        } else {
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " nmcli:";
+                                char buf[200];
+                                read(ifup->cpstdout, buf, 200);
+                                printf("%s", buf);
+                                cout << "\n";
                                 fflush(stdout);
                             }
                         }
-                        spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+                        delete ifup2;
+                    } else {
                         if (debug == 1) {
-                            cout << "\n" + getTime() + " nmcli error:";
-                            read(ifup->cpstderr, buf, 100);
-                            printf("%s", buf);
-                            cout << ",exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
+                            cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
                             fflush(stdout);
                         }
-                        delete ifdisable;
-                        delete ifenable;
-                        delete ifup2;
                     }
                     delete ifup;
                 }
             }
         }
-    }
-    if (debug = 1) {
-        cout << "\n" + getTime() + " network manager exited.\n";
-        fflush(stdout);
     }
 }
 
