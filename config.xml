@@ -18,6 +18,6 @@
     <internet-test-url>www.google.com</internet-test-url>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <gps-device>/dev/ttyS0</gps-device>
-    <gps-sdevice-baudrate></gps-sdevice-baudrate>
+    <gps-sdevice-baudrate>57600</gps-sdevice-baudrate>
     <debug>1</debug>
 </config>

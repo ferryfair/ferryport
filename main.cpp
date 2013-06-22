@@ -1546,6 +1546,7 @@ void* networkManager(void* arg) {
         if (waitInterval = presentCheckTime - previousCheckTime >= reconnectDuration) {
             waitInterval = reconnectDuration;
             if (poke(internetTestURL) != 0) {
+                sleep(5);
                 if (mobileBroadbandCon.length() > 0) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
