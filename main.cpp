@@ -38,6 +38,8 @@
 #include <sys/prctl.h>
 #include <semaphore.h>
 
+#include "my-object-glue.h"
+
 #define MAX_CAMS 10
 #define APP_NAME "remotedevicecontroller"
 using namespace std;
@@ -1375,27 +1377,23 @@ void configure() {
 
 void secondFork() {
     secondChild = fork();
-    if (secondChild != 0) {
-        int status;
-        wait(&status);
-        secondFork();
-    } else {
+    if (secondChild == 0) {
         secondChild = getpid();
         prctl(PR_SET_PDEATHSIG, SIGKILL);
         run();
     }
+
 }
 
 void firstFork() {
     firstChild = fork();
-    if (firstChild != 0) {
-        int status;
-        wait(&status);
-        firstFork();
-    } else {
+    if (firstChild == 0) {
         firstChild = getpid();
         prctl(PR_SET_PDEATHSIG, SIGKILL);
-        secondFork();
+        while (1) {
+            secondFork();
+            waitpid(secondChild, NULL, 0);
+        }
     }
 }
 
@@ -1433,13 +1431,14 @@ void signalHandler(int signal_number) {
 
             } else if (firstChild == getpid()) {
                 cerr << "\n" + getTime() + " derror: secondchild exited.\n";
+                firstFork();
             } else if (rootProcess == getpid()) {
                 cerr << "\n" + getTime() + " derror: first child exited.\n";
             }
         }
         pid_t pid;
         int status;
-        while ((pid = waitpid(-1, NULL, WNOHANG | WCONTINUED)) > 0) {
+        while ((pid = waitpid(-1, &status, WNOHANG | WCONTINUED)) > 0) {
             if (debug == 1) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
                 fflush(stdout);
@@ -1632,7 +1631,10 @@ int main(int argc, char** argv) {
                     runMode = opt;
                     close(1);
                     dup2(ferr, 2);
-                    firstFork();
+                    while (true) {
+                        firstFork();
+                        wait(firstChild);
+                    }
                 } else if (opt.compare("normal") == 0) {
                     run();
                 }

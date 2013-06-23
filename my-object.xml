@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
 <node name="/com/example/MyObject">
+
   <interface name="com.example.MyObject">
+    <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="my_object"/>
     <method name="ManyArgs">
+      <!-- This is optional, and in this case is redunundant -->
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="my_object_many_args"/>
       <arg type="u" name="x" direction="in" />
       <arg type="s" name="str" direction="in" />
       <arg type="d" name="trouble" direction="in" />
