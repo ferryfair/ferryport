@@ -21,7 +21,7 @@ else
     else
         echo "Installing ffmpeg..."
         if which apt-get >/dev/null; then
-            sudo apt-get remove ffmpeg x264 libav-tools libvpx-dev libx264-dev yasm
+            sudo apt-get -y remove ffmpeg x264 libav-tools libvpx-dev libx264-dev yasm
             sudo apt-get update
             sudo apt-get -y install autoconf automake build-essential checkinstall git libass-dev libfaac-dev \
               libgpac-dev libjack-jackd2-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
@@ -34,7 +34,7 @@ else
             cd ~/ffmpeg_sources
             git clone --depth 1 git://git.videolan.org/x264.git
             cd x264
-            ./configure --prefix="$HOME/ffmpeg_build" --bindir="$HOME/bin" --enable-static
+            ./configure --prefix="/usr/local" --bindir="/usr/local/bin" --enable-static
             make
             make install
             make distclean
@@ -43,7 +43,7 @@ else
             git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
             cd fdk-aac
             autoreconf -fiv
-            ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
+            ./configure --prefix="/usr/local" --disable-shared
             make
             make install
             make distclean
@@ -57,9 +57,9 @@ else
             cd ~/ffmpeg_sources
             git clone --depth 1 git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
-            PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure --prefix="$HOME/ffmpeg_build" \
-              --extra-cflags="-I$HOME/ffmpeg_build/include" --extra-ldflags="-L$HOME/ffmpeg_build/lib" \
-              --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac \
+            PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" ./configure --prefix="/usr/local" \
+              --extra-cflags="-I/usr/local/include" --extra-ldflags="-L/usr/local/lib" \
+              --bindir="/usr/local/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac \
               --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx \
               --enable-libx264 --enable-nonfree --enable-x11grab
             make
