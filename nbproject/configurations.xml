@@ -10,6 +10,8 @@
       <itemPath>Socket.h</itemPath>
       <itemPath>SocketException.h</itemPath>
       <itemPath>debug.h</itemPath>
+      <itemPath>my-object-bindings.h</itemPath>
+      <itemPath>my-object-glue.h</itemPath>
       <itemPath>myconverters.h</itemPath>
       <itemPath>mystdlib.h</itemPath>
       <itemPath>myxml.h</itemPath>
@@ -31,6 +33,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.cpp</itemPath>
+      <itemPath>my-object.xml</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -108,6 +111,8 @@
       </item>
       <item path="my-object-bindings.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="my-object-glue.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="my-object.xml" ex="false" tool="3" flavor2="0">
       </item>
       <item path="myconverters.cpp" ex="false" tool="1" flavor2="0">
@@ -171,6 +176,8 @@
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="my-object-bindings.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="my-object-glue.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="my-object.xml" ex="false" tool="3" flavor2="0">
       </item>
