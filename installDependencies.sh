@@ -29,7 +29,7 @@ else
               libx11-dev libxext-dev libxfixes-dev pkg-config texi2html zlib1g-dev
             mkdir ~/ffmpeg_sources
 
-            sudo apt-get install yasm
+            sudo apt-get -y install yasm
             
             cd ~/ffmpeg_sources
             git clone --depth 1 git://git.videolan.org/x264.git
@@ -48,11 +48,11 @@ else
             make install
             make distclean
             
-            sudo apt-get install libmp3lame-dev
+            sudo apt-get -y install libmp3lame-dev
             
-            sudo apt-get install libopus-dev
+            sudo apt-get -y install libopus-dev
 
-            sudo apt-get install libvpx-dev
+            sudo apt-get -y install libvpx-dev
             
             cd ~/ffmpeg_sources
             git clone --depth 1 git://source.ffmpeg.org/ffmpeg
