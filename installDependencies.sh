@@ -27,29 +27,26 @@ else
               libgpac-dev libjack-jackd2-dev libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev \
               librtmp-dev libsdl1.2-dev libspeex-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev \
               libx11-dev libxext-dev libxfixes-dev pkg-config texi2html zlib1g-dev
+            mkdir ~/ffmpeg_sources
+
+            sudo apt-get install yasm
             
-            wget http://www.tortall.net/projects/yasm/releases/yasm-1.2.0.tar.gz
-            tar xzvf yasm-1.2.0.tar.gz
-            cd yasm-1.2.0
-            ./configure --prefix="$HOME/ffmpeg_build" --bindir="$HOME/bin"
-            make
-            sudo make install
-            cd ..
-            
-            git clone git://git.videolan.org/x264
+            cd ~/ffmpeg_sources
+            git clone --depth 1 git://git.videolan.org/x264.git
             cd x264
             ./configure --prefix="$HOME/ffmpeg_build" --bindir="$HOME/bin" --enable-static
             make
-            sudo make install
-            cd ..
+            make install
+            make distclean
             
+            cd ~/ffmpeg_sources
             git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
             cd fdk-aac
             autoreconf -fiv
             ./configure --prefix="$HOME/ffmpeg_build" --disable-shared
             make
-            sudo make install
-            cd ..
+            make install
+            make distclean
             
             sudo apt-get install libmp3lame-dev
             
@@ -57,12 +54,18 @@ else
 
             sudo apt-get install libvpx-dev
             
-            git clone git://source.ffmpeg.org/ffmpeg
+            cd ~/ffmpeg_sources
+            git clone --depth 1 git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
-            ./configure --prefix="$HOME/ffmpeg_build" --extra-cflags="-I$HOME/ffmpeg_build/include" --extra-ldflags="-L$HOME/ffmpeg_build/lib" --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
+            PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure --prefix="$HOME/ffmpeg_build" \
+              --extra-cflags="-I$HOME/ffmpeg_build/include" --extra-ldflags="-L$HOME/ffmpeg_build/lib" \
+              --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac \
+              --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx \
+              --enable-libx264 --enable-nonfree --enable-x11grab
             make
-            sudo make install
-            cd ..
+            make install
+            make distclean
+            hash -r
         fi
         if which yum >/dev/null; then 
             sudo yum update    
