@@ -948,7 +948,7 @@ camState camStateChange() {
         cs = CAM_NEW_STATE;
         return cs;
     }
-    string strNetwork = "ip:" + currentIP + ",signalstrength:NA";
+    string strNetwork = "ip:" + currentIP + ",signalstrength:-1";
     string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>" + strNetwork + "</network></GetDataChangeBySystemId>";
     if (debug > 0) {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
@@ -1555,7 +1555,7 @@ void* networkManager(void* arg) {
                             cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
                             fflush(stdout);
                         }
-                        sleep(10);
+                        sleep(30);
                         spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
                         if (ifup2->getChildExitStatus() != 0) {
                             if (debug == 1) {
@@ -1566,6 +1566,19 @@ void* networkManager(void* arg) {
                                 cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
                                 fflush(stdout);
                             }
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " networkManager: disabling wwan." + "\n";
+                                fflush(stdout);
+                            }
+                            spawn disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
+                            sleep(10);
+                            if (debug == 1) {
+                                cout << "\n" + getTime() + " networkManager: enabling wwan." + "\n";
+                                fflush(stdout);
+                            }
+                            spawn enableCon = new spawn("nmcli nm wwan on", false, NULL, false, true);
+                            delete enableCon;
+                            delete disableCon;
                         } else {
                             if (debug == 1) {
                                 cout << "\n" + getTime() + " nmcli:";
