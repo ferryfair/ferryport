@@ -494,7 +494,6 @@ public:
         int i = 0;
         int csIndex;
         camService cs = csList::getCamService(cam, &csIndex);
-        cs.state = CAM_OFF;
         string proc = "/proc/" + string(itoa(cs.pid));
         struct stat ptr;
         if (stat(proc.c_str(), &ptr) != -1) {
@@ -502,6 +501,7 @@ public:
             i = kill(cs.pid, SIGKILL);
             while (!pkilled);
         }
+        cs.state = CAM_OFF;
         return i;
     }
 
@@ -571,7 +571,6 @@ public:
         } else {
             return -1;
         }
-
     }
 
     static void setRecordPath(string cam, string recordPath) {
