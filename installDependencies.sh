@@ -36,7 +36,7 @@ else
             cd x264
             ./configure --prefix="/usr/local/ffmpeg_build" --bindir="/usr/local/bin" --enable-static
             make
-            make install
+            sudo make install
             make distclean
             
             cd ~/ffmpeg_sources
@@ -45,7 +45,7 @@ else
             autoreconf -fiv
             ./configure --prefix="/usr/local/ffmpeg_build" --disable-shared
             make
-            make install
+            sudo make install
             make distclean
             
             sudo apt-get -y install libmp3lame-dev
@@ -60,7 +60,7 @@ else
             PKG_CONFIG_PATH="/usr/local/ffmpeg_build/lib/pkgconfig"
             ./configure --prefix="/usr/local/ffmpeg_build"   --extra-cflags="-I/usr/local/ffmpeg_build/include" --extra-ldflags="-L/usr/local/ffmpeg_build/lib"   --bindir="/usr/local/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac   --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
             make
-            make install
+            sudo make install
             make distclean
             hash -r
         fi
