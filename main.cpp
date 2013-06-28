@@ -1570,13 +1570,13 @@ void* networkManager(void* arg) {
                                 cout << "\n" + getTime() + " networkManager: disabling wwan." + "\n";
                                 fflush(stdout);
                             }
-                            spawn disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
+                            spawn *disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
                             sleep(10);
                             if (debug == 1) {
                                 cout << "\n" + getTime() + " networkManager: enabling wwan." + "\n";
                                 fflush(stdout);
                             }
-                            spawn enableCon = new spawn("nmcli nm wwan on", false, NULL, false, true);
+                            spawn *enableCon = new spawn("nmcli nm wwan on", false, NULL, false, true);
                             delete enableCon;
                             delete disableCon;
                         } else {
