@@ -530,7 +530,7 @@ public:
                     i++;
                 }
             } else {
-                i++;
+                csList::removeCamService(string(cams[j]));
             }
         }
         i = 0;
