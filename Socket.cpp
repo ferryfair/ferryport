@@ -37,6 +37,17 @@ bool Socket::create() {
     if (setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &on, sizeof ( on)) == -1)
         return false;
 
+    struct timeval timeout;
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+
+    if (setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout,
+            sizeof (timeout)) < 0)
+        return false;
+
+    if (setsockopt(m_sock, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout,
+            sizeof (timeout)) < 0)
+        return false;
 
     return true;
 
