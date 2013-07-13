@@ -58,7 +58,7 @@ else
             git clone --depth 1 git://source.ffmpeg.org/ffmpeg
             cd ffmpeg
             PKG_CONFIG_PATH="/usr/local/ffmpeg_build/lib/pkgconfig"
-            ./configure --prefix="/usr/local/ffmpeg_build"   --extra-cflags="-I/usr/local/ffmpeg_build/include" --extra-ldflags="-L/usr/local/ffmpeg_build/lib"   --bindir="/usr/local/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac   --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
+            ./configure --prefix="/usr/local/ffmpeg_build"   --extra-cflags="-I/usr/local/ffmpeg_build/include" --extra-ldflags="-L/usr/local/ffmpeg_build/lib"   --bindir="/usr/local/bin" --extra-libs="-ldl" --enable-gpl --enable-libass --enable-libfdk-aac   --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab --enable-opencl
             make
             sudo make install
             make distclean
@@ -136,7 +136,7 @@ else
             ./configure --prefix="$HOME/ffmpeg_build" --extra-cflags="-I$HOME/ffmpeg_build/include" \
             --extra-ldflags="-L$HOME/ffmpeg_build/lib" --bindir="$HOME/bin" --extra-libs="-ldl" --enable-gpl \
             --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora \
-            --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab
+            --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree --enable-x11grab --enable-opencl
             make
             sudo make install
             make distclean

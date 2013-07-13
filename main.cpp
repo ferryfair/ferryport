@@ -1000,7 +1000,6 @@ camState camStateChange() {
                 string strRecordedFiles = getStrRecordedFiles();
                 content = "<InsertRecordedFiles xmlns=\"" + xmlnamespace + "\"><SystemSecurityKey>" + securityKey + "</SystemSecurityKey><strRecordedFiles>" + strRecordedFiles + "</strRecordedFiles></InsertRecordedFiles>";
                 response = reqSOAPService("InsertRecordedFiles", (xmlChar*) content.c_str());
-
             } else if ((int) resCon.find("ViewSingleRecordedFile", 0) >= 0) {
                 string toStreamVidFilesStr = resCon.substr(23);
                 vector<string> toStreamVidFilesVector = explode("^", toStreamVidFilesStr);
