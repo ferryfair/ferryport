@@ -137,9 +137,24 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
             close(this->cpstdoutp[0]);
             dup2(this->cpstderrp[1], 2);
             close(this->cpstderrp[0]);
-            if (daemon) {
-                fi = open("/dev/null", O_APPEND | O_WRONLY);
-                dup2(fi, 2);
+            if ((debug & 2) == 2) {
+                close(this->cpstdinp[0]);
+                close(this->cpstdoutp[1]);
+                close(this->cpstderrp[1]);
+                if (daemon) {
+                    dup2(stderrfd, 1);
+                    dup2(stderrfd, 2);
+                } else {
+                    dup2(stdinfd, 0);
+                    dup2(stdoutfd, 1);
+                    dup2(stdoutfd, 2);
+                }
+                std::cout << "\n" + getTime() + " spawn : daemon=" + std::string(itoa(daemon)) + "\n";
+                fflush(stdout);
+            } else if (daemon) {
+                close(this->cpstdinp[0]);
+                close(this->cpstdoutp[1]);
+                close(this->cpstderrp[1]);
             }
             execvp(args[0], args);
             if (daemon) {

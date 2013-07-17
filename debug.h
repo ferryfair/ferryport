@@ -9,6 +9,9 @@
 #define	DEBUG_H
 
 extern int debug;
+extern int stdinfd;
+extern int stdoutfd;
+extern int stderrfd;
 
 #endif	/* DEBUG_H */
 

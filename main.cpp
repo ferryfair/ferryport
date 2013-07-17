@@ -93,8 +93,6 @@ time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
 int SOAPServiceReqCount = 0;
 int ferr;
-int dupstdout;
-int dupstderr;
 
 bool allCams = false;
 string reqCam;
@@ -290,7 +288,7 @@ public:
             stopRecord(rIndex);
             string cmd = "ffmpeg -re -i " + rfa + " -r " + streamfps + " -s " + streamResolution + " -f flv " + sa;
             records[rIndex].recorder = spawn(cmd, true, NULL, false);
-            if (debug == 1) {
+            if ((debug & 1) == 1) {
                 cout << "\n" + getTime() + " setRecordState: " + cmd + " :" + string(itoa(records[rIndex].recorder.cpid)) + "\n";
                 fflush(stdout);
             }
@@ -452,7 +450,7 @@ public:
                 cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
-                if (debug == 1) {
+                if ((debug & 1) == 1) {
                     cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
                     fflush(stdout);
                 }
@@ -462,7 +460,7 @@ public:
                 cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
-                if (debug == 1) {
+                if ((debug & 1) == 1) {
                     cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
                     fflush(stdout);
                 }
@@ -472,7 +470,7 @@ public:
                 cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
-                if (debug == 1) {
+                if ((debug & 1) == 1) {
                     cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
                     fflush(stdout);
                 }
@@ -950,7 +948,7 @@ camState camStateChange() {
     }
     string strNetwork = "ip:" + currentIP + ",signalstrength:-1";
     string content = "<GetDataChangeBySystemId xmlns=\"" + xmlnamespace + "\"><SystemName>" + getMachineName() + "</SystemName><SecurityKey>" + securityKey + "</SecurityKey><Cameras>" + strCameras + "</Cameras><GPS>" + strGPS + "</GPS><network>" + strNetwork + "</network></GetDataChangeBySystemId>";
-    if (debug > 0) {
+    if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " SOAPRequest " + string(itoa(SOAPServiceReqCount)) + ": " + content + "\n";
         fflush(stdout);
     }
@@ -961,7 +959,7 @@ camState camStateChange() {
         cs = CAM_NEW_STATE;
         return cs;
     }
-    if (debug > 0) {
+    if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " SOAPResponse: " + response + "\n";
         fflush(stdout);
     }
@@ -1075,8 +1073,11 @@ void run() {
     secondChild = getpid();
     readConfig();
     if (runMode.compare("daemon") == 0) {
-        if (debug == 1) {
+        if ((debug & 1) == 1) {
             dup2(ferr, 1);
+            stdoutfd = ferr;
+        } else {
+            close(1);
         }
     }
     if (securityKey.length() == 0) {
@@ -1438,7 +1439,7 @@ void signalHandler(int signal_number) {
         pid_t pid;
         int status;
         while ((pid = waitpid(-1, NULL, WNOHANG | WCONTINUED)) > 0) {
-            if (debug == 1) {
+            if ((debug & 1) == 1) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
                 fflush(stdout);
             }
@@ -1494,12 +1495,12 @@ void* gpsLocationUpdater(void* arg) {
     if (gpsSDeviceBaudrate.length() > 0) {
         cmd = "stty -F " + gpsDevice + " " + gpsSDeviceBaudrate;
         spawn gpsdbrsetter = spawn(cmd, false, NULL, false, true);
-        if (debug == 1) {
+        if ((debug & 1) == 1) {
             cout << "\n" + getTime() + " setting baudrate:cmd:" + cmd + "\n";
         }
     }
     FILE *f = fopen(gpsDevice.c_str(), "r");
-    if (debug == 1) {
+    if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " reading gpsdevice:" + gpsDevice + "\n";
     }
     while (f) {
@@ -1518,7 +1519,7 @@ void* gpsLocationUpdater(void* arg) {
             gpsCoordinates = gpsDevice + ":" + string(buf);
         }
     }
-    if (debug == 1) {
+    if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " no gps device found. gpsLocationUpdater exiting.\n";
     }
 }
@@ -1530,7 +1531,7 @@ void test() {
 }
 
 void* networkManager(void* arg) {
-    if (debug = 1) {
+    if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " network manager started.\n";
         fflush(stdout);
     }
@@ -1548,7 +1549,7 @@ void* networkManager(void* arg) {
                 if (mobileBroadbandCon.length() > 0) {
                     spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
                     if (ifup->getChildExitStatus() != 0) {
-                        if (debug == 1) {
+                        if ((debug & 1) == 1) {
                             char ifuperr[100];
                             read(ifup->cpstderr, ifuperr, 100);
                             cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
@@ -1557,7 +1558,7 @@ void* networkManager(void* arg) {
                         sleep(30);
                         spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
                         if (ifup2->getChildExitStatus() != 0) {
-                            if (debug == 1) {
+                            if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " nmcli stderror:";
                                 char buf[100];
                                 read(ifup->cpstderr, buf, 100);
@@ -1565,13 +1566,13 @@ void* networkManager(void* arg) {
                                 cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
                                 fflush(stdout);
                             }
-                            if (debug == 1) {
+                            if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " networkManager: disabling wwan." + "\n";
                                 fflush(stdout);
                             }
                             spawn *disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
                             sleep(10);
-                            if (debug == 1) {
+                            if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " networkManager: enabling wwan." + "\n";
                                 fflush(stdout);
                             }
@@ -1579,7 +1580,7 @@ void* networkManager(void* arg) {
                             delete enableCon;
                             delete disableCon;
                         } else {
-                            if (debug == 1) {
+                            if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " nmcli:";
                                 char buf[200];
                                 read(ifup->cpstdout, buf, 200);
@@ -1590,7 +1591,7 @@ void* networkManager(void* arg) {
                         }
                         delete ifup2;
                     } else {
-                        if (debug == 1) {
+                        if ((debug & 1) == 1) {
                             cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
                             fflush(stdout);
                         }
@@ -1604,8 +1605,9 @@ void* networkManager(void* arg) {
 
 int main(int argc, char** argv) {
     ferr = open(logFile.c_str(), O_WRONLY | O_APPEND);
-    dupstdout = dup(1);
-    dupstderr = dup(2);
+    stdinfd = dup(0);
+    stdoutfd = dup(1);
+    stderrfd = dup(2);
     runningProcess = atoi(readConfigValue("pid").c_str());
     struct sigaction signalaction_struct;
     memset(&signalaction_struct, 0, sizeof (signalaction_struct));
@@ -1643,6 +1645,7 @@ int main(int argc, char** argv) {
                     runMode = opt;
                     close(1);
                     dup2(ferr, 2);
+                    stderrfd = ferr;
                     firstFork();
                 } else if (opt.compare("normal") == 0) {
                     run();
