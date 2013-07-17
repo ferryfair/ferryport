@@ -67,6 +67,7 @@ string pollInterval;
 string autoInsertCameras;
 string configFile = "/etc/" + string(APP_NAME) + ".conf.xml";
 string camFolder = "/dev/";
+bool camcaptureCompression;
 string recordResolution;
 string streamResolution;
 string recordfps;
@@ -447,7 +448,7 @@ public:
             spawn process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -457,7 +458,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -467,7 +468,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f video4linux2 -vcodec mjpeg -r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -683,6 +684,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/debug", xc);
     node = xo->nodesetval->nodeTab[0];
     debug = atoi((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/camcapture-compression", xc);
+    node = xo->nodesetval->nodeTab[0];
+    camcaptureCompression = (string((char*) xmlNodeGetContent(node)).compare("true")==0);
     xo = xmlXPathEvalExpression((xmlChar*) "/config/record-fps", xc);
     node = xo->nodesetval->nodeTab[0];
     recordfps = string((char*) xmlNodeGetContent(node));
@@ -1302,6 +1306,7 @@ void configure() {
     cout << "\nstream-addr:\t" + streamAddr;
     cout << "\nstream-port:\t" + streamPort;
     cout << "\nnamespace:\t" + xmlnamespace;
+    cout << "\ncamcapture-compression:\t" + readConfigValue("camcapture-compression");
     cout << "\nrecord-fps:\t" + recordfps;
     cout << "\nrecord-resolution:\t" + recordResolution;
     cout << "\nstream-fps:\t" + streamfps;

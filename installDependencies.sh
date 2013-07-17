@@ -149,7 +149,7 @@ if ls /usr/include/libxml2 > /dev/null;then
         echo "libxml2 devel installed."
 else
     if which apt-get > /dev/null;then
-        sudo apt-get install libxml2-dev
+        sudo apt-get -y --force-yes install libxml2-dev
     fi
     if which yum > /dev/null;then
         sudo yum install libxml2-devel
@@ -160,7 +160,7 @@ if which g++ > /dev/null;then
         echo "g++ devel installed."
 else
     if which apt-get > /dev/null;then
-        sudo apt-get install g++
+        sudo apt-get -y --force-yes install g++
     fi
     if which yum > /dev/null;then
         sudo yum install g++
