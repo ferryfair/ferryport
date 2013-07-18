@@ -448,7 +448,7 @@ public:
             spawn process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -458,7 +458,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -468,7 +468,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?"-vcodec mjpeg ":"")+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
