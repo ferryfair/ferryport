@@ -2,12 +2,12 @@
 <config>
     <app-name>kvrportal</app-name>
     <server-addr>183.82.98.147</server-addr>
-    <server-port>15142</server-port>
+    <server-port>11000</server-port>
     <stream-addr>183.82.98.147</stream-addr>
     <stream-port>25222</stream-port>
     <namespace>PortalvisionService</namespace>
     <bootup>true</bootup>
-    <camcapture-compression discription="if true, higher cpu utilization and low usb bandwidth">false</camcapture-compression>
+    <camcapture-compression description="if true, higher cpu utilization and low usb bandwidth">false</camcapture-compression>
     <record-fps>15</record-fps>
     <record-resolution>320x240</record-resolution>
     <stream-fps>8</stream-fps>
@@ -15,7 +15,7 @@
     <manage-network>1</manage-network>
     <reconnect-duration>2</reconnect-duration>
     <reconnect-poll-count>2</reconnect-poll-count>
-    <mobile-broadband-connection>"Reliance connection"</mobile-broadband-connection>
+    <mobile-broadband-connection description="if u use wvdial to connect set it to 'wvdial' without quotes or if u use network manager set it to connection name. If connection name contains spaces, put it in double quotes">wvdial</mobile-broadband-connection>
     <internet-test-url>www.google.com</internet-test-url>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <gps-device>/dev/ttyS0</gps-device>

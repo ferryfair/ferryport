@@ -448,7 +448,7 @@ public:
             spawn process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -458,7 +458,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -468,7 +468,7 @@ public:
                 fcpid = process.cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f video4linux2 "+(camcaptureCompression?string("-vcodec mjpeg "):string(""))+"-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
                 process = spawn(cmd, true, NULL, false);
                 if ((debug & 1) == 1) {
@@ -686,7 +686,7 @@ void readConfig() {
     debug = atoi((char*) xmlNodeGetContent(node));
     xo = xmlXPathEvalExpression((xmlChar*) "/config/camcapture-compression", xc);
     node = xo->nodesetval->nodeTab[0];
-    camcaptureCompression = (string((char*) xmlNodeGetContent(node)).compare("true")==0);
+    camcaptureCompression = (string((char*) xmlNodeGetContent(node)).compare("true") == 0);
     xo = xmlXPathEvalExpression((xmlChar*) "/config/record-fps", xc);
     node = xo->nodesetval->nodeTab[0];
     recordfps = string((char*) xmlNodeGetContent(node));
@@ -1543,6 +1543,7 @@ void* networkManager(void* arg) {
     time_t presentCheckTime;
     time_t previousCheckTime;
     time_t waitInterval = reconnectDuration;
+    spawn *wvdial;
     while (true) {
         previousCheckTime = presentCheckTime;
         time(&presentCheckTime);
@@ -1552,56 +1553,67 @@ void* networkManager(void* arg) {
             if (poke(internetTestURL) != 0) {
                 sleep(5);
                 if (mobileBroadbandCon.length() > 0) {
-                    spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
-                    if (ifup->getChildExitStatus() != 0) {
-                        if ((debug & 1) == 1) {
-                            char ifuperr[100];
-                            read(ifup->cpstderr, ifuperr, 100);
-                            cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
-                            fflush(stdout);
+                    if (mobileBroadbandCon.compare("wvdial") == 0) {
+                        if (wvdial) {
+                            kill(wvdial->cpid, SIGTERM);
+                            waitpid(wvdial->cpid);
+                            delete wvdial;
+                            wvdial = new spawn("wvdial", true, NULL, true, false);
+                        } else {
+                            wvdial = new spawn("wvdial", true, NULL, true, false);
                         }
-                        sleep(30);
-                        spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
-                        if (ifup2->getChildExitStatus() != 0) {
+                    } else {
+                        spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
+                        if (ifup->getChildExitStatus() != 0) {
                             if ((debug & 1) == 1) {
-                                cout << "\n" + getTime() + " nmcli stderror:";
-                                char buf[100];
-                                read(ifup->cpstderr, buf, 100);
-                                printf("%s", buf);
-                                cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
+                                char ifuperr[100];
+                                read(ifup->cpstderr, ifuperr, 100);
+                                cout << "\n" + getTime() + " networkManager: ifup->exitcode=" + string(itoa(ifup->getChildExitStatus())) + ",ifup->error=" + string(ifuperr) + ". sleeping 10 seconds...\n";
                                 fflush(stdout);
                             }
-                            if ((debug & 1) == 1) {
-                                cout << "\n" + getTime() + " networkManager: disabling wwan." + "\n";
-                                fflush(stdout);
+                            sleep(30);
+                            spawn *ifup2 = new spawn("nmcli con up id " + mobileBroadbandCon, false, NULL, false, true);
+                            if (ifup2->getChildExitStatus() != 0) {
+                                if ((debug & 1) == 1) {
+                                    cout << "\n" + getTime() + " nmcli stderror:";
+                                    char buf[100];
+                                    read(ifup->cpstderr, buf, 100);
+                                    printf("%s", buf);
+                                    cout << ". Exitcode=" + string(itoa(ifup2->getChildExitStatus())) + ".\n";
+                                    fflush(stdout);
+                                }
+                                if ((debug & 1) == 1) {
+                                    cout << "\n" + getTime() + " networkManager: disabling wwan." + "\n";
+                                    fflush(stdout);
+                                }
+                                spawn *disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
+                                sleep(10);
+                                if ((debug & 1) == 1) {
+                                    cout << "\n" + getTime() + " networkManager: enabling wwan." + "\n";
+                                    fflush(stdout);
+                                }
+                                spawn *enableCon = new spawn("nmcli nm wwan on", false, NULL, false, true);
+                                delete enableCon;
+                                delete disableCon;
+                            } else {
+                                if ((debug & 1) == 1) {
+                                    cout << "\n" + getTime() + " nmcli:";
+                                    char buf[200];
+                                    read(ifup->cpstdout, buf, 200);
+                                    printf("%s", buf);
+                                    cout << "\n";
+                                    fflush(stdout);
+                                }
                             }
-                            spawn *disableCon = new spawn("nmcli nm wwan off", false, NULL, false, true);
-                            sleep(10);
-                            if ((debug & 1) == 1) {
-                                cout << "\n" + getTime() + " networkManager: enabling wwan." + "\n";
-                                fflush(stdout);
-                            }
-                            spawn *enableCon = new spawn("nmcli nm wwan on", false, NULL, false, true);
-                            delete enableCon;
-                            delete disableCon;
+                            delete ifup2;
                         } else {
                             if ((debug & 1) == 1) {
-                                cout << "\n" + getTime() + " nmcli:";
-                                char buf[200];
-                                read(ifup->cpstdout, buf, 200);
-                                printf("%s", buf);
-                                cout << "\n";
+                                cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
                                 fflush(stdout);
                             }
                         }
-                        delete ifup2;
-                    } else {
-                        if ((debug & 1) == 1) {
-                            cout << "\n" + getTime() + " networkManager: ifup: connected." + "\n";
-                            fflush(stdout);
-                        }
+                        delete ifup;
                     }
-                    delete ifup;
                 }
             }
         }
