@@ -1556,7 +1556,7 @@ void* networkManager(void* arg) {
                     if (mobileBroadbandCon.compare("wvdial") == 0) {
                         if (wvdial) {
                             kill(wvdial->cpid, SIGTERM);
-                            waitpid(wvdial->cpid);
+                            waitpid(wvdial->cpid, NULL, WUNTRACED);
                             delete wvdial;
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                         } else {
