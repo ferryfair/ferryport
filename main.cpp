@@ -1556,11 +1556,21 @@ void* networkManager(void* arg) {
                     if (mobileBroadbandCon.compare("wvdial") == 0) {
                         if (wvdial) {
                             kill(wvdial->cpid, SIGTERM);
+                            if ((debug & 1) == 1) {
+                                char wvdialerr[100];
+                                read(wvdial->cpstderr, wvdialerr, 100);
+                                cout << "\n" + getTime() + " networkManager: wvdial->exitcode=" + string(itoa(wvdial->getChildExitStatus())) + ",wvdialerr->error=" + string(wvdialerr) + ". sleeping 10 seconds...\n";
+                                fflush(stdout);
+                            }
                             waitpid(wvdial->cpid, NULL, WUNTRACED);
                             delete wvdial;
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                         } else {
                             wvdial = new spawn("wvdial", true, NULL, true, false);
+                            if ((debug & 1) == 1) {
+                                cout << "\n" + getTime() + " networkManager: wvdialed for the 1st time.\n";
+                                fflush(stdout);
+                            }
                         }
                     } else {
                         spawn *ifup = new spawn("nmcli con up id " + mobileBroadbandCon + " --timeout 30", false, NULL, false, true);
