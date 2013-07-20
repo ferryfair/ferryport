@@ -945,7 +945,7 @@ camState camStateChange() {
         csList::setStateAllCams(CAM_RECORD);
         record();
     } else if (IP.length() == 0) {
-        cerr << "\n" + getTime() + " CONNECTION ERROR.";
+        cerr << "\n" + getTime() + " CONNECTION ERROR.\n";
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
@@ -958,7 +958,7 @@ camState camStateChange() {
     }
     string response = reqSOAPService("GetDataChangeBySystemId", (xmlChar*) content.c_str());
     if (response.compare("CONNECTION ERROR") == 0) {
-        cerr << "\n" + getTime() + " CONNECTION ERROR.";
+        cerr << "\n" + getTime() + " CONNECTION ERROR.\n";
         csList::setStateAllCams(CAM_RECORD);
         cs = CAM_NEW_STATE;
         return cs;
