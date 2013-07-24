@@ -71,8 +71,8 @@ char getche(void) {
 
 bool spawn::processCleaned;
 
-void spawn::defaultOnStopHandler(spawn* process){
-    delete process;
+void spawn::defaultOnStopHandler(spawn* process) {
+    //delete process;
 }
 
 spawn::spawn() {
@@ -131,8 +131,8 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bo
     args[a] = NULL;
     this->cmdName = std::string(args[0]);
     this->cmd = command;
-    if(onStopHandler==NULL){
-        onStopHandler=&spawn::defaultOnStopHandler;
+    if (onStopHandler == NULL) {
+        onStopHandler = &spawn::defaultOnStopHandler;
     }
     if (validcmd) {
         this->cpid = fork();
@@ -166,7 +166,6 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bo
                 close(this->cpstdinp[0]);
                 close(this->cpstdoutp[1]);
                 close(this->cpstderrp[1]);
-                dup2(stderrfd,2);
             }
             execvp(args[0], args);
             if (daemon) {
@@ -196,7 +195,7 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bo
             }
         }
     } else {
-        
+
     }
 }
 

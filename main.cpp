@@ -928,7 +928,7 @@ string reqSOAPService(string service, xmlChar* content) {
     return res;
 }
 
-camState camStateChange() {
+camState systemStateChange() {
     getCameras();
     ps = cs;
     cs = csList::camReattached() ? CAM_NEW_STATE : CAM_PREVIOUS_STATE;
@@ -1121,7 +1121,7 @@ void run() {
                         allCams = true;
                         pst = 0;
                     } else {
-                        csc = camStateChange();
+                        csc = systemStateChange();
                         pst = pis;
                     }
                 }
