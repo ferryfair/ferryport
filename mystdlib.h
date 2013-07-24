@@ -37,13 +37,18 @@ private:
     int childExitStatus;
 
 public:
+    static bool processCleaned;
+    static void defaultOnStopHandler(spawn* process);
     pid_t cpid;
     int cpstdin;
     int cpstdout;
     int cpstderr;
+    std::string cmd;
+    std::string cmdName;
+    void (*onStopHandler)(spawn*);
 
     spawn();
-    spawn(std::string command, bool daemon = false, void (*onStopHandler)() = NULL, bool freeChild = false, bool block = false);
+    spawn(std::string command, bool daemon = false, void (*onStopHandler)(spawn*) = NULL, bool freeChild = false, bool block = false);
     int getChildExitStatus();
     int pkill(int signal = SIGTERM);
 };

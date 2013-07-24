@@ -7,11 +7,16 @@
 
 #ifndef DEBUG_H
 #define	DEBUG_H
+#include "mystdlib.h"
+#include <map>
+#include <utility>
+#include <sys/types.h>
 
 extern int debug;
 extern int stdinfd;
 extern int stdoutfd;
 extern int stderrfd;
+extern std::map<pid_t, spawn*> processMap;
 
 #endif	/* DEBUG_H */
 

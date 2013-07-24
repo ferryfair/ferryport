@@ -1448,6 +1448,12 @@ void signalHandler(int signal_number) {
                 cout << "\n" + getTime() + " child exited. pid:" + std::string(itoa(pid)) + "\n";
                 fflush(stdout);
             }
+            spawn *process = processMap[pid];
+            if (process != NULL) {
+                process->onStopHandler(process);
+            } else {
+                spawn::processCleaned = true;
+            }
         }
         child_exit_status = status;
     }
@@ -1529,10 +1535,22 @@ void* gpsLocationUpdater(void* arg) {
     }
 }
 
+void onEndTestSpawnHandler(spawn* process) {
+    printf("\nls ended\n");
+    delete process;
+}
+
 void test() {
-    char ipAddr[16];
-    cout << GetPrimaryIp();
-    fflush(stdout);
+    while (true) {
+        char ipAddr[16];
+        cout << GetPrimaryIp();
+        fflush(stdout);
+        debug = 1;
+        dup2(ferr, 2);
+        stderrfd = ferr;
+        spawn *ls = new spawn("ffmpeg -f v4l2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.225:25333/venkat/test0", true, &onEndTestSpawnHandler, false);
+        sleep(1);
+    }
 }
 
 void* networkManager(void* arg) {
@@ -1544,6 +1562,7 @@ void* networkManager(void* arg) {
     time_t previousCheckTime;
     time_t waitInterval = reconnectDuration;
     spawn *wvdial;
+    spawn *wvdialconf;
     while (true) {
         previousCheckTime = presentCheckTime;
         time(&presentCheckTime);
@@ -1566,6 +1585,13 @@ void* networkManager(void* arg) {
                             delete wvdial;
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                         } else {
+                            wvdialconf = new spawn("wvdialconf", true, NULL, true, true);
+                            if ((debug & 1) == 1) {
+                                char wvdialconferr[100];
+                                read(wvdialconf->cpstderr, wvdialconferr, 100);
+                                cout << "\n" + getTime() + " networkManager: wvdialconf->exitcode=" + string(itoa(wvdialconf->getChildExitStatus())) + ",wvdialconferr->error=" + string(wvdialconferr) + ". sleeping 10 seconds...\n";
+                                fflush(stdout);
+                            }
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                             if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " networkManager: wvdialed for the 1st time.\n";
@@ -1712,5 +1738,6 @@ int main(int argc, char** argv) {
         }
         break;
     } while (next_option != -1);
+    fflush(stdout);
     return 0;
 }

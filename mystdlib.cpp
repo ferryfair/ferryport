@@ -69,11 +69,17 @@ char getche(void) {
     return getch_(1);
 }
 
+bool spawn::processCleaned;
+
+void spawn::defaultOnStopHandler(spawn* process){
+    delete process;
+}
+
 spawn::spawn() {
 
 }
 
-spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool freeChild, bool block) {
+spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bool freeChild, bool block) {
     pipe(this->cpstdinp);
     pipe(this->cpstdoutp);
     pipe(this->cpstderrp);
@@ -123,6 +129,11 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
         ++a;
     }
     args[a] = NULL;
+    this->cmdName = std::string(args[0]);
+    this->cmd = command;
+    if(onStopHandler==NULL){
+        onStopHandler=&spawn::defaultOnStopHandler;
+    }
     if (validcmd) {
         this->cpid = fork();
         if (this->cpid == 0) {
@@ -155,18 +166,20 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
                 close(this->cpstdinp[0]);
                 close(this->cpstdoutp[1]);
                 close(this->cpstderrp[1]);
+                dup2(stderrfd,2);
             }
             execvp(args[0], args);
             if (daemon) {
                 close(fi);
             }
-            if (onStopHandler != NULL)onStopHandler();
             if (debug == 1) {
                 close(this->cpstdoutp[1]);
                 std::cout << "\n" + getTime() + "termination of pid: " + std::string(itoa(getpid())) + " command: " + command;
                 fflush(stdout);
             }
         } else {
+            processMap[this->cpid] = this;
+            this->onStopHandler = onStopHandler;
             close(this->cpstdinp[0]);
             this->cpstdin = this->cpstdinp[1];
             close(this->cpstdoutp[1]);
@@ -176,12 +189,14 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(), bool fre
             for (i = 0; i < a; i++) {
                 free(args[a]);
             }
-            if (block) {
+            if (block || spawn::processCleaned) {
+                spawn::processCleaned = false;
                 waitpid(this->cpid, &this->childExitStatus, 0);
+                onStopHandler(this);
             }
         }
     } else {
-
+        
     }
 }
 
