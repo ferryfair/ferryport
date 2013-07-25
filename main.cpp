@@ -319,6 +319,17 @@ public:
 };
 vector<RecordsManager::Record> RecordsManager::records;
 
+void ffmpegOnStopHandler(spawn* process) {
+    if ((debug & 1) == 1) {
+        char ffmpegerr[100];
+        ffmpegerr[0] = '\0';
+        read(process->cpstderr, ffmpegerr, 100);
+        cout << "\n" + getTime() + " ffmpeg->exitcode=" + string(itoa(process->getChildExitStatus())) + ",ffmpegerr->error=" + string(ffmpegerr) + "\n";
+        fflush(stdout);
+    }
+    delete process;
+}
+
 class csList {
 private:
     static int s;
@@ -445,37 +456,37 @@ public:
             string dev = camFolder + cam;
             pid_t fcpid = cs.pid;
             camState ns = cs.state;
-            spawn process;
+            spawn *process;
             string cmd;
             if (cs.newState == CAM_RECORD) {
-                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
+                cmd = "ffmpeg -loglevel error -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " " + cs.recordPath;
                 csList::stopCam(cam);
-                process = spawn(cmd, true, NULL, false);
+                process = new spawn(cmd, true, &ffmpegOnStopHandler, false);
                 if ((debug & 1) == 1) {
-                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process->cpid)) + "\n";
                     fflush(stdout);
                 }
-                fcpid = process.cpid;
+                fcpid = process->cpid;
                 ns = CAM_RECORD;
             } else if (cs.newState == CAM_STREAM) {
-                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
+                cmd = "ffmpeg -loglevel error -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath;
                 csList::stopCam(cam);
-                process = spawn(cmd, true, NULL, false);
+                process = new spawn(cmd, true, &ffmpegOnStopHandler, false);
                 if ((debug & 1) == 1) {
-                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process->cpid)) + "\n";
                     fflush(stdout);
                 }
-                fcpid = process.cpid;
+                fcpid = process->cpid;
                 ns = CAM_STREAM;
             } else if (cs.newState == CAM_STREAM_N_RECORD) {
-                cmd = "ffmpeg -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
+                cmd = "ffmpeg -loglevel error -f video4linux2 " + (camcaptureCompression ? string("-vcodec mjpeg ") : string("")) + "-r " + recordfps + " -s " + recordResolution + " -i " + dev + " -r " + streamfps + " -s " + streamResolution + " -f flv " + cs.streamPath + " " + cs.recordPath;
                 csList::stopCam(cam);
-                process = spawn(cmd, true, NULL, false);
+                process = new spawn(cmd, true, &ffmpegOnStopHandler, false);
                 if ((debug & 1) == 1) {
-                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process.cpid)) + "\n";
+                    cout << "\n" + getTime() + " setCamState: " + cmd + " :" + string(itoa(process->cpid)) + "\n";
                     fflush(stdout);
                 }
-                fcpid = process.cpid;
+                fcpid = process->cpid;
                 ns = CAM_STREAM_N_RECORD;
             } else if (cs.newState == CAM_OFF) {
                 kill(cs.pid, SIGTERM);
@@ -1537,7 +1548,6 @@ void* gpsLocationUpdater(void* arg) {
 
 void onEndTestSpawnHandler(spawn* process) {
     printf("\nls ended\n");
-    delete process;
 }
 
 void test() {
@@ -1548,7 +1558,7 @@ void test() {
         debug = 1;
         dup2(ferr, 2);
         stderrfd = ferr;
-        spawn *ls = new spawn("ffmpeg -f v4l2 -r 15 -s 40x30 -i /dev/video0 -f flv rtmp://192.168.2.225:25333/venkat/test0", true, &onEndTestSpawnHandler, false);
+        spawn ls = spawn("ls -l", true, &onEndTestSpawnHandler, false);
         sleep(1);
     }
 }

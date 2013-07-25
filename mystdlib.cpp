@@ -145,10 +145,10 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bo
             close(this->cpstdinp[1]);
             dup2(this->cpstdoutp[1], 1);
             close(this->cpstdoutp[0]);
-            close(this->cpstdoutp[0]);
             dup2(this->cpstderrp[1], 2);
             close(this->cpstderrp[0]);
-            if ((debug & 2) == 2) {
+            /*Most beautiful thing I ever commented :|*/
+            /*if ((debug & 2) == 2) {
                 close(this->cpstdinp[0]);
                 close(this->cpstdoutp[1]);
                 close(this->cpstderrp[1]);
@@ -166,7 +166,7 @@ spawn::spawn(std::string command, bool daemon, void (*onStopHandler)(spawn*), bo
                 close(this->cpstdinp[0]);
                 close(this->cpstdoutp[1]);
                 close(this->cpstderrp[1]);
-            }
+            }*/
             execvp(args[0], args);
             if (daemon) {
                 close(fi);
