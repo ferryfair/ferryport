@@ -16,9 +16,10 @@
     <reconnect-duration>2</reconnect-duration>
     <reconnect-poll-count>2</reconnect-poll-count>
     <mobile-broadband-connection description="if u use wvdial to connect set it to 'wvdial' without quotes or if u use network manager set it to connection name. If connection name contains spaces, put it in double quotes">wvdial</mobile-broadband-connection>
+    <config-modem description="to run wvdialconf at startup put it true default false">false</config-modem>
     <internet-test-url>www.google.com</internet-test-url>
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
-    <gps-device>/dev/ttyS0</gps-device>
+    <gps-device>/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller-if00-port0</gps-device>
     <gps-sdevice-baudrate>57600</gps-sdevice-baudrate>
     <debug>1</debug>
 </config>

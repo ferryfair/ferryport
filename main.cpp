@@ -81,6 +81,7 @@ int reconnectDuration;
 int reconnectPollCount = 0;
 int reconnectPollCountCopy;
 string internetTestURL;
+bool configModem;
 string recordsFolder = "/var/" + string(APP_NAME) + "records/";
 string logFile = "/var/log/" + string(APP_NAME) + ".log";
 string initFile = "/etc/init/" + string(APP_NAME) + ".conf";
@@ -723,6 +724,9 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/mobile-broadband-connection", xc);
     node = xo->nodesetval->nodeTab[0];
     mobileBroadbandCon = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/config-modem", xc);
+    node = xo->nodesetval->nodeTab[0];
+    configModem = (string((char*) xmlNodeGetContent(node)).compare("true") == 0);
     xo = xmlXPathEvalExpression((xmlChar*) "/config/internet-test-url", xc);
     node = xo->nodesetval->nodeTab[0];
     internetTestURL = string((char*) xmlNodeGetContent(node));
@@ -1331,6 +1335,7 @@ void configure() {
     cout << "\nreconnect-poll-count:\t" + string(itoa(reconnectPollCount));
     cout << "\ninternet-test-url:\t" + internetTestURL;
     cout << "\nmobile-broadband-connection:\t" + mobileBroadbandCon;
+    cout << "\nconfig-modem:\t" + readConfigValue("config-modem");
     cout << "\ncorporate-network-gateway:\t" + corpNWGW;
     cout << "\ngps-device:\t" + gpsDevice;
     cout << "\ngps-sdevice-baudrate:\t" + gpsSDeviceBaudrate;
@@ -1558,7 +1563,7 @@ void test() {
         debug = 1;
         dup2(ferr, 2);
         stderrfd = ferr;
-        spawn ls = spawn("ls -l", true, &onEndTestSpawnHandler, false);
+        spawn ls = spawn("ls -l", true, NULL, false);
         sleep(1);
     }
 }
@@ -1587,21 +1592,26 @@ void* networkManager(void* arg) {
                             kill(wvdial->cpid, SIGTERM);
                             if ((debug & 1) == 1) {
                                 char wvdialerr[100];
+                                wvdialerr[0] = '\0';
                                 read(wvdial->cpstderr, wvdialerr, 100);
-                                cout << "\n" + getTime() + " networkManager: wvdial->exitcode=" + string(itoa(wvdial->getChildExitStatus())) + ",wvdialerr->error=" + string(wvdialerr) + ". sleeping 10 seconds...\n";
+                                cout << "\n" + getTime() + " networkManager: wvdial->exitcode=" + string(itoa(wvdial->getChildExitStatus())) + ",wvdialerr->error=" + string(wvdialerr) + ". \n";
                                 fflush(stdout);
                             }
                             waitpid(wvdial->cpid, NULL, WUNTRACED);
                             delete wvdial;
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                         } else {
-                            wvdialconf = new spawn("wvdialconf", true, NULL, true, true);
-                            if ((debug & 1) == 1) {
-                                char wvdialconferr[100];
-                                read(wvdialconf->cpstderr, wvdialconferr, 100);
-                                cout << "\n" + getTime() + " networkManager: wvdialconf->exitcode=" + string(itoa(wvdialconf->getChildExitStatus())) + ",wvdialconferr->error=" + string(wvdialconferr) + ". sleeping 10 seconds...\n";
-                                fflush(stdout);
+                            sleep(30);
+                            if (configModem) {
+                                wvdialconf = new spawn("wvdialconf", true, NULL, true, true);
+                                if ((debug & 1) == 1) {
+                                    char wvdialconferr[100];
+                                    read(wvdialconf->cpstderr, wvdialconferr, 100);
+                                    cout << "\n" + getTime() + " networkManager: wvdialconf->exitcode=" + string(itoa(wvdialconf->getChildExitStatus())) + ",wvdialconferr->error=" + string(wvdialconferr) + ". sleeping 10 seconds...\n";
+                                    fflush(stdout);
+                                }
                             }
+                            sleep(10);
                             wvdial = new spawn("wvdial", true, NULL, true, false);
                             if ((debug & 1) == 1) {
                                 cout << "\n" + getTime() + " networkManager: wvdialed for the 1st time.\n";

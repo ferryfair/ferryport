@@ -1,1 +1,2 @@
+SUBSYSTEM=="tty", ATTRS{bInterfaceNumber}=="00", ATTRS{bNumEndpoints}=="03", ATTRS{product}=="ZTE CDMA Tech", SYMLINK+="CDMAModem"
 KERNEL=="video?", SYMLINK+="/var/remotedevicecontrollercams/%k"
