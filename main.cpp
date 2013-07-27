@@ -91,6 +91,7 @@ string installationFolder = "/usr/local/bin/";
 string binFile = installationFolder + string(APP_NAME);
 string rootBinLnk = "/usr/bin/" + string(APP_NAME);
 string srcFolder = "/usr/local/src/" + string(APP_NAME);
+string deviceRulesFile = "/etc/udev/rules.d/" + string(APP_NAME) + ".rules";
 time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
 int SOAPServiceReqCount = 0;
@@ -1255,6 +1256,8 @@ void instReInstComCode(string sk) {
             cout << "\n/etc " + initdFile + " is created.";
         if (0 == copyfile("config.xml", configFile))
             cout << "\n/etc " + configFile + " is created.";
+        if (0 == copyfile("devices.rules", deviceRulesFile))
+            cout << "\n/etc " + deviceRulesFile + " is created.";
         if (0 == copyfile(string(APP_NAME), binFile)) {
             string modCmd = "chmod u+x " + binFile;
             system(modCmd.c_str());
@@ -1519,16 +1522,19 @@ void* gpsLocationUpdater(void* arg) {
     char c;
     int i = 0;
     string cmd;
-    if (gpsSDeviceBaudrate.length() > 0) {
+    sleep(10);
+    FILE *f = fopen(gpsDevice.c_str(), "r");
+    if ((debug & 1) == 1) {
+        cout << "\n" + getTime() + " reading gpsdevice:" + gpsDevice + "\n";
+        fflush(stdout);
+    }
+    if (f && gpsSDeviceBaudrate.length() > 0) {
         cmd = "stty -F " + gpsDevice + " " + gpsSDeviceBaudrate;
         spawn gpsdbrsetter = spawn(cmd, false, NULL, false, true);
         if ((debug & 1) == 1) {
             cout << "\n" + getTime() + " setting baudrate:cmd:" + cmd + "\n";
+            fflush(stdout);
         }
-    }
-    FILE *f = fopen(gpsDevice.c_str(), "r");
-    if ((debug & 1) == 1) {
-        cout << "\n" + getTime() + " reading gpsdevice:" + gpsDevice + "\n";
     }
     while (f) {
         c = (char) getc(f);
@@ -1548,6 +1554,7 @@ void* gpsLocationUpdater(void* arg) {
     }
     if ((debug & 1) == 1) {
         cout << "\n" + getTime() + " no gps device found. gpsLocationUpdater exiting.\n";
+        fflush(stdout);
     }
 }
 
@@ -1556,16 +1563,8 @@ void onEndTestSpawnHandler(spawn* process) {
 }
 
 void test() {
-    while (true) {
-        char ipAddr[16];
-        cout << GetPrimaryIp();
-        fflush(stdout);
-        debug = 1;
-        dup2(ferr, 2);
-        stderrfd = ferr;
-        spawn ls = spawn("ls -l", true, NULL, false);
-        sleep(1);
-    }
+    readConfig();
+    gpsLocationUpdater(NULL);
 }
 
 void* networkManager(void* arg) {
