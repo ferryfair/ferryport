@@ -96,6 +96,7 @@ time_t gpsUpdatePeriod = 10;
 bool pkilled = true;
 int SOAPServiceReqCount = 0;
 int ferr;
+bool contiguousPoll = false;
 
 bool allCams = false;
 string reqCam;
@@ -1119,41 +1120,60 @@ void run() {
             int pst = pis;
             camState csc;
             camState ps;
+            int contiguousRunCounter = 0;
+            time_t presentRunTime;
+            time_t previousRunTime;
+
             while (true) {
-                time(&ct);
-                if (ct - st > 900) {
-                    csc = ps;
-                    st = ct;
-                    pst = 0;
-                    csList::setStateAllCams(CAM_RECORD);
-                    cs = CAM_NEW_STATE;
-                } else {
-                    if (newlyMarried) {
-                        getCameras();
-                        csc = CAM_NEW_STATE;
-                        cs = csc;
-                        csList::setStateAllCams(CAM_RECORD);
-                        newlyMarried = false;
-                        allCams = true;
-                        pst = 0;
-                    } else {
-                        csc = systemStateChange();
-                        pst = pis;
+                previousRunTime = presentRunTime;
+                time(&presentRunTime);
+                if (presentRunTime == previousRunTime) {
+                    contiguousRunCounter++;
+                    if (contiguousRunCounter > 4) {
+                        contiguousPoll = true;
+                        contiguousRunCounter = 0;
                     }
                 }
-                switch (csc) {
-                    case CAM_NEW_STATE:
-                        ps = csc;
-                        record();
-                        break;
-                    case CAM_OFF:
-                        ps = csc;
-                        ecode = system("pkill -9 ffmpeg");
-                        break;
-                    default:
-                        break;
+                if (!contiguousPoll) {
+                    time(&ct);
+                    if (ct - st > 900) {
+                        csc = ps;
+                        st = ct;
+                        pst = 0;
+                        csList::setStateAllCams(CAM_RECORD);
+                        cs = CAM_NEW_STATE;
+                    } else {
+                        if (newlyMarried) {
+                            getCameras();
+                            csc = CAM_NEW_STATE;
+                            cs = csc;
+                            csList::setStateAllCams(CAM_RECORD);
+                            newlyMarried = false;
+                            allCams = true;
+                            pst = 0;
+                        } else {
+                            csc = systemStateChange();
+                            pst = pis;
+                        }
+                    }
+                    switch (csc) {
+                        case CAM_NEW_STATE:
+                            ps = csc;
+                            record();
+                            break;
+                        case CAM_OFF:
+                            ps = csc;
+                            ecode = system("pkill -9 ffmpeg");
+                            break;
+                        default:
+                            break;
+                    }
+                    sleep(pst);
+                } else {
+                    contiguousPoll = false;
+                    contiguousRunCounter = 0;
+                    sleep(pst);
                 }
-                sleep(pst);
             }
         }
     }
