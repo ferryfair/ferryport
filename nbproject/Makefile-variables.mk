@@ -12,8 +12,8 @@ CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
 CND_ARTIFACT_NAME_Debug=remotedevicecontroller
 CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/remotedevicecontroller
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=remotedevicecontroller.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/remotedevicecontroller.tar
+CND_PACKAGE_NAME_Debug=remotedevicecontroller.deb
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/remotedevicecontroller.deb
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
