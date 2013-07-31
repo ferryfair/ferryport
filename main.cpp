@@ -1127,7 +1127,7 @@ void run() {
             while (true) {
                 previousRunTime = presentRunTime;
                 time(&presentRunTime);
-                if (presentRunTime == previousRunTime) {
+                if (presentRunTime - previousRunTime <= 2) {
                     contiguousRunCounter++;
                     if (contiguousRunCounter > 4) {
                         contiguousPoll = true;
