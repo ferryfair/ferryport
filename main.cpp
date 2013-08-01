@@ -641,6 +641,8 @@ void uninstall() {
     cout << "\nDeleting " + initdFile;
     unlink(initdFile.c_str());
     cout << "\nDeleting  " + configFile;
+    unlink(deviceRulesFile.c_str());
+    cout << "\nDeleting  " + deviceRulesFile;
     unlink(configFile.c_str());
     cout << "\nDeleting " + binFile;
     unlink(binFile.c_str());
