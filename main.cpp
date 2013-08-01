@@ -1092,14 +1092,7 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
 
 void run() {
     secondChild = getpid();
-    if (runMode.compare("daemon") == 0) {
-        if ((debug & 1) == 1) {
-            dup2(ferr, 1);
-            stdoutfd = ferr;
-        } else {
-            close(1);
-        }
-    } else {
+    if (runMode.compare("daemon") != 0) {
         readConfig();
     }
     if (securityKey.length() == 0) {
@@ -1417,8 +1410,17 @@ void configure() {
 
 void secondFork() {
     readConfig();
+    if (runMode.compare("daemon") == 0) {
+        if ((debug & 1) == 1) {
+            dup2(ferr, 1);
+            stdoutfd = ferr;
+        } else {
+            close(1);
+        }
+    }
     secondChild = fork();
     if (secondChild != 0) {
+        fflush(stdout);
         if (manageNetwork == 1) {
             pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
         }
@@ -1621,7 +1623,7 @@ void* networkManager(void* arg) {
                             }
                             waitpid(wvdial->cpid, NULL, WUNTRACED);
                             delete wvdial;
-                            wvdial = new spawn("wvdial", true, NULL, true, false);
+                            wvdial = new spawn("wvdial", true, NULL, false, false);
                         } else {
                             sleep(30);
                             if (configModem) {
