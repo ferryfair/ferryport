@@ -1104,6 +1104,7 @@ void run() {
     }
     if (securityKey.length() == 0) {
         cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
+        fflush(stdout);
     } else {
         if (geteuid() != 0) {
             cout << "\nPlease login as root are sudo user.\n";
@@ -1415,9 +1416,9 @@ void configure() {
 }
 
 void secondFork() {
+    readConfig();
     secondChild = fork();
     if (secondChild != 0) {
-        readConfig();
         if (manageNetwork == 1) {
             pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
         }
