@@ -1092,7 +1092,6 @@ void print_usage(FILE* stream, int exit_code, char* program_name) {
 
 void run() {
     secondChild = getpid();
-    readConfig();
     if (runMode.compare("daemon") == 0) {
         if ((debug & 1) == 1) {
             dup2(ferr, 1);
@@ -1100,6 +1099,8 @@ void run() {
         } else {
             close(1);
         }
+    } else {
+        readConfig();
     }
     if (securityKey.length() == 0) {
         cout << "\nPlease install or re-install " + string(APP_NAME) + ".";
@@ -1108,9 +1109,6 @@ void run() {
             cout << "\nPlease login as root are sudo user.\n";
         } else {
             pthread_create(&gpsUpdaterThread, NULL, &gpsLocationUpdater, NULL);
-            if (manageNetwork == 1) {
-                pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
-            }
             writeConfigValue("pid", string(itoa(rootProcess)));
             csList::initialize(10);
             int ecode;
@@ -1419,6 +1417,10 @@ void configure() {
 void secondFork() {
     secondChild = fork();
     if (secondChild != 0) {
+        readConfig();
+        if (manageNetwork == 1) {
+            pthread_create(&nwMgrThread, NULL, &networkManager, NULL);
+        }
         int status;
         wait(&status);
         secondFork();
