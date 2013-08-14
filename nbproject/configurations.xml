@@ -11,6 +11,7 @@
       <itemPath>SocketException.h</itemPath>
       <itemPath>debug.h</itemPath>
       <itemPath>myconverters.h</itemPath>
+      <itemPath>mycurl.h</itemPath>
       <itemPath>mystdlib.h</itemPath>
       <itemPath>myxml.h</itemPath>
     </logicalFolder>
@@ -43,6 +44,7 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
       <itemPath>README.md</itemPath>
+      <itemPath>certs</itemPath>
       <itemPath>config.xml</itemPath>
       <itemPath>devices.rules</itemPath>
       <itemPath>error.log</itemPath>
@@ -72,6 +74,8 @@
           <linkerLibItems>
             <linkerOptionItem>-lxml2</linkerOptionItem>
             <linkerOptionItem>-lpthread</linkerOptionItem>
+            <linkerOptionItem>-lssl</linkerOptionItem>
+            <linkerOptionItem>-lcrypto</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -124,6 +128,8 @@
       <item path="myconverters.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mycurl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="mycurl.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mystdlib.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -184,6 +190,8 @@
       <item path="myconverters.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mycurl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="mycurl.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mystdlib.cpp" ex="false" tool="1" flavor2="0">
       </item>

@@ -1,12 +1,13 @@
 
-#include<string>
-#include<string.h>
-#include "mycurl.h"
-#include<stdio.h>
-#include<sstream>
 #include "myconverters.h"
 #include "ClientSocket.h"
 #include "SocketException.h"
+#include "mycurl.h"
+#include "Socket.h"
+#include<string>
+#include<string.h>
+#include<stdio.h>
+#include<sstream>
 #include<iostream>
 #include<stdlib.h>
 using namespace std;
@@ -36,7 +37,7 @@ using namespace std;
     return res;
 }*/
 
-string SOAPReq(string hostname, string port, string requestPath, string SOAPAction, string content, bool ssl) {
+string SOAPReq(string hostname, string port, string requestPath, string SOAPAction, string content, Socket::SOCKET_TYPE socketType, std::string trustedCA, std::string privatecert, std::string privatekey) {
     int cl = content.length();
     ostringstream ss;
     ss << cl;
@@ -84,6 +85,54 @@ string SOAPReq(string hostname, string port, string requestPath, string SOAPActi
 
 
 
+    int si = response.find("Content-Length: ", 0) + 16;
+    int l = response.find("\r\n", si) - si;
+    string len = response.substr(si, l);
+    l = atoi(len.c_str());
+    si = response.find("\r\n\r\n", 0) + 4;
+    string res2 = response.substr(si, l);
+    return res2;
+}
+
+string HTTPReq(string hostname, string requestPath, string port, string content, Socket::SOCKET_TYPE socketType, std::string trustedCA, std::string privatecert, std::string privatekey) {
+    int cl = content.length();
+    ostringstream ss;
+    ss << cl;
+    string ccl = ss.str();
+    string req1 = "POST " + requestPath + " HTTP/1.1\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE 6.0; MS Web Services Client Protocol 2.0.50727.3625)\r\nContent-Type: text/xml; charset=utf-8\r\nHost: " + hostname + "\r\nContent-Length: " + ccl + "\r\nConnection: Keep-Alive\r\n\r\n";
+    string response;
+    int p = atoi(port.c_str());
+
+    try {
+        ClientSocket client_socket(hostname, p, socketType);
+        try {
+            client_socket << req1;
+        } catch (SocketException&) {
+            return "CONNECTION ERROR";
+        }
+        string resbuf;
+        response = "";
+        int l = 0;
+        bool s = false;
+        do {
+            try {
+                client_socket >> resbuf;
+                response += resbuf;
+                if (!s) {
+                    int si = response.find("Content-Length: ", 0) + 16;
+                    l = response.find("\r\n", si) - si;
+                    string len = response.substr(si, l);
+                    l = atoi(len.c_str())+(int) response.find("\r\n\r\n") + 4;
+                    s = true;
+                }
+            } catch (SocketException&) {
+                return "CONNECTION ERROR";
+            }
+            l -= resbuf.length();
+        } while (l > 0);
+    } catch (SocketException& e) {
+        return "CONNECTION ERROR";
+    }
     int si = response.find("Content-Length: ", 0) + 16;
     int l = response.find("\r\n", si) - si;
     string len = response.substr(si, l);

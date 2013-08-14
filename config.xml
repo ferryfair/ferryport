@@ -5,6 +5,7 @@
     <server-port>11000</server-port>
     <stream-addr>183.82.98.147</stream-addr>
     <stream-port>25222</stream-port>
+    <connection-encryption description="NO-default value,TLS1_1-TLS version 1.1 encryption">NO</connection-encryption>
     <namespace>PortalvisionService</namespace>
     <bootup>true</bootup>
     <camcapture-compression description="if true, higher cpu utilization and low usb bandwidth">false</camcapture-compression>
@@ -21,5 +22,5 @@
     <corporate-network-gateway>192.168.2.1</corporate-network-gateway>
     <gps-device>/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller-if00-port0</gps-device>
     <gps-sdevice-baudrate>57600</gps-sdevice-baudrate>
-    <debug>1</debug>
+    <debug description="debug value in context of spawn=2, socket=4">1</debug>
 </config>

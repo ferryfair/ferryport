@@ -61,7 +61,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lxml2 -lpthread
+LDLIBSOPTIONS=-lxml2 -lpthread -lssl -lcrypto
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

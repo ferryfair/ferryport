@@ -11,6 +11,7 @@
 #include "myxml.h"
 #include "mycurl.h"
 #include "debug.h"
+#include "Socket.h"
 #include <cstdlib>
 #include <stdio.h>
 #include <string.h>
@@ -37,6 +38,7 @@
 #include <signal.h>
 #include <sys/prctl.h>
 #include <semaphore.h>
+#include <netdb.h>
 
 #define MAX_CAMS 10
 #define APP_NAME "remotedevicecontroller"
@@ -58,6 +60,10 @@ string serverAddr;
 string serverPort;
 string streamAddr;
 string streamPort;
+Socket::SOCKET_TYPE socketType;
+string trustedCA = "/etc/ssl/certs/ferryfair.cert";
+string privatecert = "/etc/ssl/certs/" + string(APP_NAME) + ".ferryfair.cert";
+string privatekey = "/etc/ssl/certs/" + string(APP_NAME) + ".ferryfair.key";
 string appName;
 string xmlnamespace;
 string systemId;
@@ -649,6 +655,12 @@ void uninstall() {
     cout << "\nDeleting " + logFile;
     unlink(logFile.c_str());
     cout << "\nDeleting " + rootBinLnk;
+    unlink(trustedCA.c_str());
+    cout << "\nDeleting " + trustedCA;
+    unlink(privatecert.c_str());
+    cout << "\nDeleting " + privatecert;
+    unlink(privatekey.c_str());
+    cout << "\nDeleting " + privatekey;
     unlink(rootBinLnk.c_str());
     string input;
 decision:
@@ -691,6 +703,10 @@ void readConfig() {
     xo = xmlXPathEvalExpression((xmlChar*) "/config/stream-port", xc);
     node = xo->nodesetval->nodeTab[0];
     streamPort = string((char*) xmlNodeGetContent(node));
+    xo = xmlXPathEvalExpression((xmlChar*) "/config/connection-encryption", xc);
+    node = xo->nodesetval->nodeTab[0];
+    string et = string((char*) xmlNodeGetContent(node));
+    socketType = (et.compare("NO") == 0) ? Socket::DEFAULT : ((et.compare("TLS1_1") == 0) ? Socket::TLS1_1 : Socket::DEFAULT);
     xo = xmlXPathEvalExpression((xmlChar*) "/config/app-name", xc);
     node = xo->nodesetval->nodeTab[0];
     appName = string((char*) xmlNodeGetContent(node));
@@ -943,7 +959,7 @@ string reqSOAPService(string service, xmlChar* content) {
     xmlDocDumpMemory(xd, &s, &size);
     xmlCleanupParser();
     SOAPServiceReqCount++;
-    string res = SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", xmlnamespace + "/" + service, string((char*) s), false);
+    string res = (socketType == Socket::TLS1_1 ? SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", xmlnamespace + "/" + service, string((char*) s)) : SOAPReq(serverAddr, serverPort, "/" + appName + "/CamCaptureService.asmx", xmlnamespace + "/" + service, string((char*) s), socketType, trustedCA, privatecert, privatekey));
     return res;
 }
 
@@ -1276,6 +1292,12 @@ void instReInstComCode(string sk) {
             string modCmd = "chmod u+x " + binFile;
             system(modCmd.c_str());
         }
+        if (0 == copyfile("certs/ferryfair.cert", trustedCA))
+            cout << "\n " + trustedCA + " is created.";
+        if (0 == copyfile("certs/ferryport.ferryfair.cert", privatecert))
+            cout << "\n " + privatecert + " is created.";
+        if (0 == copyfile("certs/ferryport.ferryfair.key", privatekey))
+            cout << "\n " + privatekey + " is created.";
         cout << "\nEnabling " + string(APP_NAME) + " to run as root...";
         string slc = "ln -s " + binFile + " " + rootBinLnk;
         system(slc.c_str());
@@ -1337,6 +1359,7 @@ void configure() {
     cout << "\nserver-port:\t" + serverPort;
     cout << "\nstream-addr:\t" + streamAddr;
     cout << "\nstream-port:\t" + streamPort;
+    cout << "\nconnection-encryption:\t" + readConfigValue("connection-encryption");
     cout << "\nnamespace:\t" + xmlnamespace;
     cout << "\ncamcapture-compression:\t" + readConfigValue("camcapture-compression");
     cout << "\nrecord-fps:\t" + recordfps;
@@ -1590,8 +1613,8 @@ void onEndTestSpawnHandler(spawn* process) {
 }
 
 void test() {
-    readConfig();
-    gpsLocationUpdater(NULL);
+    debug = 7;
+    HTTPReq("ferry.ferryfair.com", "443", "/index.html", "", Socket::TLS1_1);
 }
 
 void* networkManager(void* arg) {
